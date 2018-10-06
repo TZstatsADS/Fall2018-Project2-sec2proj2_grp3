@@ -9,6 +9,7 @@ library(htmltools)
 library(shiny)
 library(leaflet)
 library(data.table)
+
 shinyUI(
   fluidPage(includeCSS("../lib/style.css"),
             navbarPage(p(class="h","All-N-Food"),id = "inTabset", 
@@ -31,7 +32,7 @@ shinyUI(
                                                 actionButton("click_reset_buttom","Reset")
                                   ))
                        ),
-                       
+       
                        tabPanel("I eat food", icon = icon("map"),  fluidPage(
                          fluidRow(
                            tags$head(
