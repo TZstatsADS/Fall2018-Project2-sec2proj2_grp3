@@ -33,89 +33,64 @@ shinyUI(
                                   ))
                        ),
        
-                       tabPanel("I eat food", icon = icon("map"),  fluidPage(
+                       tabPanel("Owner's Choice", icon = icon("map"),  fluidPage(
                          fluidRow(
                            tags$head(
                              # Include our custom CSS
                              includeCSS("../lib/styles.css"),
                              includeScript("../lib/click_hover.js")
-                             
                            ),
                            
-                           tags$div(id="searchBar",
-                                    column(width=1,
-                                           style = "width:270px;display:inline-block;margin-right: 0px;margin-bottom:0px;margin-top:0px;padding-right:0px",
-                                           textInput(inputId="location",label="", value="", placeholder = "search your location...")
-                                    ),
-                                    column(width=1,
-                                           style = "margin-top: 25px;display:inline-block;margin-right: 0px;margin-left: 0px;left:0px;bottom:5px;padding-left:0px",
-                                           actionButton("button1",label="", icon = icon("search"))
-                                           
-                                    )),
-                           column(width=1, 
-                                  style="margin-top: 25px;display:inline-block;margin-right: 10px",
-                                  dropdownButton(circle = FALSE,
-                                                 label = "type", status = "default", 
-                                                 selectInput(inputId="min_bedrooms", label="choose", choices = c("American"=0,"Chinese"=1,"Japaness"=2,"Mexican"=3,"Middle-East"=4,"Korean"=5,"Latin-American"=6)
-                                                             
-                                                 ))
-                           ),
-                           
-                           column(width=1,
-                                  style = "margin-top: 25px;display:inline-block;margin-right: 0px;margin-left: 120px",
-                                  dropdownButton(circle = FALSE,
-                                                 label="Min price",  status = "default",
-                                                 numericInput(inputId="min_price", label = "choose",value=0, min=0,max=1000000,step=1000)
-                                  )
-                                  
-                           ),
-                           column(width=1,
-                                  style = "margin-top: 25px;display:inline-block;margin-right: 0px;",
-                                  dropdownButton(circle = FALSE,
-                                                 label="Max price",  status = "default", 
-                                                 numericInput(inputId="max_price", value=1000000, label="choose",min=0,max=1000000,step=1000 )
-                                  )),
-                           column(width=1,
-                                  style = "margin-top: 25px;;display:inline-block;margin-right: 10px;",
-                                  dropdownButton(circle = FALSE,
-                                                 label = "Rating", status = "default",
-                                                 selectInput(inputId="min_bathrooms", label="choose", choices = c("Wrost"=0,"1"=1,"2"=2,"3"=3,"4"=4,"5"=5,"Excellent"=6)
-                                                             
-                                                 ))),
-                           
-                           column(width=1, 
-                                  style = "margin-top: 25px;display:inline-block;margin-right: 0px;",
-                                  actionButton("button2",label="Reset" 
-                                               
-                                  ))),
+                           # tags$div(id="searchBar",
+                           #          column(width=1,
+                           #                 style = "width:270px;display:inline-block;margin-right: 0px;margin-bottom:0px;margin-top:0px;padding-right:0px",
+                           #                 textInput(inputId="location",label="", value="", placeholder = "search your location...")
+                           #          ),
+                           #          column(width=1,
+                           #                 style = "margin-top: 25px;display:inline-block;margin-right: 0px;margin-left: 0px;left:0px;bottom:5px;padding-left:0px",
+                           #                 actionButton("button1",label="", icon = icon("search"))
+                           #                 
+                                    # )),
+                           column(3, h1("Characterize Your Restaurant")),
+                           column(2, selectInput("check2_type", "Restaurant Type:", 
+                                                 c(" " = "", list("American", "Chinese", "Italian", "Japanese", "Pizza", "Others")))),
+                           column(3,
+                                  sliderInput("check2_ppr", "People Per Restaurant:",min = 0, max = 10000, value = 10000)),
+                           column(2,
+                                  selectInput("check2_class", "Residence Class:",c(" " = "", list("Upper", "Middle", "Working", "Lower")), 
+                                              multiple=TRUE)),
+                           column(2,
+                                  selectInput("check2_age", "Age Group:", c(" " = "", list("<18", "18-24", "25-29", "30-39", "40-49", "50+")),
+                                              multiple=TRUE))
+                         ),
                          
+                         fluidRow(
+                           column(3,
+                                  selectInput("check2_market","Market:", c(" " = "", list("1","2","3")))),
+                           column(3,
+                                  selectInput("check2_crime", "Crimes:", c("Acceptable number of crimes" = "", list("1", "2", "3")))),
+                           column(2, selectInput("check2_trans", "Transportation:", c(" " = "", list("1","2","3")))),
+                           column(2, selectInput("check2_ct", "Cinema/Theater:", 
+                                                 c(" " = "", list("1","2","3")))),
+                           column(2, style = "margin-top: 25px;display:inline-block;margin-right: 0px;",
+                                  div(id = "action",actionButton("button2", "Reset")))
+                           ),
+                          
                          hr(),
-                         
-                         #                    mainPanel(
                          
                          fluidRow(
                            #column
                            
                            column(width=6, 
-                                  # br(),
-                                  # br(),
-                                  # h3("current rank"),
                                   dataTableOutput("rank")
                            ),
-                           
-                           
-                           
                            column(width=5,
-                                  leafletOutput("map", width = "120%", height = 600)
-                                  
+                                  leafletOutput("map", width = "120%", height = 480),
+                                  fluidRow(column(1,actionButton("click_back_buttom",label="Click here back to original view")))    
                            )
-                           
+                         ) 
                          )
-                         #)
-                       )
-                       
-                       
-                       )     
+                      )     
             )
   )
 )

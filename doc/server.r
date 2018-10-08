@@ -150,29 +150,26 @@ shinyServer(function(input, output,session) {
   # sort housing in current zoom level
   observe({
     housing_sort=marksInBounds()
-    
+
     if(nrow(housing_sort)!=0){
-      
+
       action=apply(housing_sort,1,function(r){
         addr=r["addr"]
         lat=r["lat"]
         lng=r["lng"]
-        paste0("<a class='go-map' href='' data-lat='",lat,"'data-lng='",lng,"'>",addr,'</a>')   
+        paste0("<a class='go-map' href='' data-lat='",lat,"'data-lng='",lng,"'>",addr,'</a>')
       }
       )
-      
+
       housing_sort$addr=action
       output$rank <- renderDataTable(housing_sort[,c("addr","price","bedrooms","bathrooms")],escape=F)
-      
-      
-      
-      
+
     }
     else{
-      
+
       output$rank=renderDataTable(housing_sort[,c("addr","price","bedrooms","bathrooms")])
     }
-    
+
   })
   
   # When point in map is hovered, show a popup with housing info
@@ -253,7 +250,8 @@ shinyServer(function(input, output,session) {
       addMarkers(lng=long,lat=lati,layerId = "1",icon=icons(
         iconUrl = "../lib/icons8-Location-50.png",iconWidth = 25, iconHeight = 25))
   })
-  #################Clear Choices############
+  
+  #############Reset for Panel 2############
   observeEvent(input$button2,{
     proxy<-leafletProxy("map")
     proxy %>%
@@ -265,15 +263,18 @@ shinyServer(function(input, output,session) {
                  clusterOptions=markerClusterOptions(),
                  group="housing_cluster")
     updateTextInput(session, inputId="location", value = "")
-  }
-  
-  )
+    
+    updateSelectInput(session, "check2_class",selected="")
+    updateSelectInput(session, "check2_age",selected="")
+    updateSelectInput(session, "check2_crime",selected = "")
+    updateSelectInput(session, "check2_trans",selected = "")
+    updateSelectInput(session, "check2_rt",selected = "")
+  })
   
   
   #############Clear button###########
   observeEvent(input$clear, {
     leafletProxy('map')%>% setView(lng = -73.971035, lat = 40.775659, zoom = 12)
-    
   })
   
   output$map <- renderLeaflet({
@@ -337,6 +338,118 @@ shinyServer(function(input, output,session) {
         clearPopups()
     }
   })
+  
+  ###Panel 2: Owner's Choice
+  
+  # areas  <- reactive({
+  #   cond.0 <- if(is.null(input$check2_ty)){paste0("Studio <= ", input$check2_pr, " |is.na(Studio) == TRUE")
+  #   } else if("Studio" %in% input$check2_ty){paste0("Studio <= ", input$check2_pr)
+  #   } else{"Studio <= 5400 |is.na(Studio) == TRUE"}
+  #   
+  #   cond.1 <- if(is.null(input$check2_ty)){paste0("X1B <= ", input$check2_pr, " |is.na(X1B) == TRUE")
+  #   } else if("1B" %in% input$check2_ty){paste0("X1B <= ", input$check2_pr)
+  #   } else{"X1B <= 5400 |is.na(X1B) == TRUE"}
+  #   
+  #   cond.2 <- if(is.null(input$check2_ty)){paste0("X2B <= ", input$check2_pr, " |is.na(X2B) == TRUE")
+  #   } else if("2B" %in% input$check2_ty) {paste0("X2B <= ", input$check2_pr)
+  #   } else{"X2B <= 5400 |is.na(X2B) == TRUE"}
+  #   
+  #   cond.3 <- if(is.null(input$check2_ty)){paste0("X3B <= ", input$check2_pr, " |is.na(X3B) == TRUE")
+  #   } else if("3B" %in% input$check2_ty) {paste0("X3B <= ", input$check2_pr)
+  #   } else{"X3B <= 5400 |is.na(X3B) == TRUE"}
+  #   
+  #   cond.4 <-  if(is.null(input$check2_ty)){paste0("X4B <= ", input$check2_pr, " |is.na(X4B) == TRUE")
+  #   } else if("4B" %in% input$check2_ty) {paste0("X4B <= ", input$check2_pr)
+  #   } else{"X4B <= 5400 |is.na(X4B) == TRUE"}
+  #   
+  #   cond.ame <- if(is.null(input$check2_re)){"ranking.American <= 46 |is.na(ranking.American) == TRUE"
+  #   } else if("American" %in% input$check2_re){"ranking.American <= 23"
+  #   } else {"ranking.American <= 46 |is.na(ranking.American) == TRUE"}
+  #   
+  #   cond.chi <- if(is.null(input$check2_re)){"ranking.Chinese <= 46 |is.na(ranking.Chinese) == TRUE"
+  #   } else if("Chinese" %in% input$check2_re) {"ranking.Chinese <= 23"
+  #   } else {"ranking.Chinese <= 46 |is.na(ranking.Chinese) == TRUE"}
+  #   
+  #   cond.ita <-  if(is.null(input$check2_re)){"ranking.Italian <= 46 |is.na(ranking.Italian) == TRUE"
+  #   } else if("Italian" %in% input$check2_re) {"ranking.Italian <= 23"
+  #   } else {"ranking.Italian <= 46 |is.na(ranking.Italian) == TRUE"}
+  #   
+  #   cond.jap <- if(is.null(input$check2_re)){"ranking.Japenses <= 46 |is.na(ranking.Japenses) == TRUE"
+  #   } else if("Japanese" %in% input$check2_re) {"ranking.Japenses <= 23"
+  #   } else {"ranking.Japenses <= 46 |is.na(ranking.Japenses) == TRUE"}
+  #   
+  #   cond.piz <- if(is.null(input$check2_re)){"ranking.Pizza <= 46 |is.na(ranking.Pizza) == TRUE"
+  #   } else if("Pizza" %in% input$check2_re) {"ranking.Pizza <= 23"
+  #   } else {"ranking.Pizza <= 46 |is.na(ranking.Pizza) == TRUE"}
+  #   
+  #   cond.oth <- if(is.null(input$check2_re)){"ranking.Others <= 46 |is.na(ranking.Others) == TRUE"
+  #   } else if("Others" %in% input$check2_re) {"ranking.Others <= 23"
+  #   } else {"ranking.Others <= 46 |is.na(ranking.Others) == TRUE"}
+  #   
+  #   trans.fil <- if(input$check2_tr == "It's everything."){
+  #     1:16
+  #   } else if(input$check2_tr == "Emmm."){
+  #     1:32
+  #   } else {
+  #     c(1:46, NA)
+  #   }
+  #   
+  #   club.fil <- if(input$check2_cb == "Let's party!"){1:16
+  #   } else if(input$check2_cb == "Drink one or two."){
+  #     1:32
+  #   } else {
+  #     c(1:46, NA)
+  #   }
+  #   
+  #   theatre.fil<- if(input$check2_ct == "Theatre goers."){1:16
+  #   } else if(input$check2_ct == "It depends."){
+  #     1:32
+  #   } else {
+  #     c(1:46, NA)
+  #   }
+  #   
+  #   market.fil <- if(input$check2_ma == "Love it!"){
+  #     1:16
+  #   } else if(input$check2_ma == "It depends."){
+  #     1:32
+  #   } else {
+  #     c(1:46, NA)
+  #   }
+  #   
+  #   areas <- (rank_all %>%
+  #               filter(eval(parse(text = cond.apt.0)), eval(parse(text = cond.apt.1)), eval(parse(text = cond.apt.2)),
+  #                      eval(parse(text = cond.apt.3)), eval(parse(text = cond.apt.4)),
+  #                      eval(parse(text = cond.ame)), eval(parse(text = cond.chi)), eval(parse(text = cond.ita)),
+  #                      eval(parse(text = cond.jap)), eval(parse(text = cond.piz)), eval(parse(text = cond.oth)),
+  #                      ranking.trans %in% trans.fil, ranking.bar %in% club.fil,
+  #                      ranking.theatre %in% theatre.fil, ranking.market %in% market.fil
+  #               ) %>%
+  #               select(zipcode))[,1]
+  #   return(areas)
+  # })
+  # 
+  # output$rank <- renderDataTable(show %>% 
+  #                                  filter(Zipcode %in% areas()),
+  #                                 options = list("sScrollX" = "100%", "bLengthChange" = FALSE))
+  
+  #############
+  ##map
+  # observe({
+  #   if(length(areas())!=0){
+  #     leafletProxy("map3")%>%clearGroup(group="new_added")%>% 
+  #       addPolygons(data=subset(subdat, subdat$ZIPCODE%in% areas()),
+  #                   weight = 2,
+  #                   color = "#34675C",
+  #                   fillColor = "#B3C100",
+  #                   fillOpacity=0.7,
+  #                   group="new_added",
+  #                   noClip = TRUE, label = ~ZIPCODE)
+  #   }
+  #   
+  #   else{
+  #     leafletProxy("map3")%>%clearGroup(group="new_added")
+  #   }
+  # })
   
   
 })
