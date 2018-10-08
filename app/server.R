@@ -1,168 +1,459 @@
 library(shiny)
-library(choroplethr)
-library(choroplethrZip)
-library(dplyr)
 library(leaflet)
-library(maps)
+library(data.table)
+library(devtools)
+library(MASS)
+library(dplyr)
+library(tigris)
+library(sp)
+library(maptools)
+library(broom)
+library(httr)
 library(rgdal)
+library(RColorBrewer)
+library(XML)
+library(DT)
+library(dplyr)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(ggmap)
+getwd()
+load("../data/avg_price_zip.RData")
+load("../data/subdat.RData")
+load("../data/housing.RData")  
+source("../lib/showPopupHover.R")
+source("../lib/ZillowApi.R")
 
-## Define Manhattan's neighborhood
-man.nbhd=c("all neighborhoods", "Central Harlem", 
-           "Chelsea and Clinton",
-           "East Harlem", 
-           "Gramercy Park and Murray Hill",
-           "Greenwich Village and Soho", 
-           "Lower Manhattan",
-           "Lower East Side", 
-           "Upper East Side", 
-           "Upper West Side",
-           "Inwood and Washington Heights")
-zip.nbhd=as.list(1:length(man.nbhd))
-zip.nbhd[[1]]=as.character(c(10026, 10027, 10030, 10037, 10039))
-zip.nbhd[[2]]=as.character(c(10001, 10011, 10018, 10019, 10020))
-zip.nbhd[[3]]=as.character(c(10036, 10029, 10035))
-zip.nbhd[[4]]=as.character(c(10010, 10016, 10017, 10022))
-zip.nbhd[[5]]=as.character(c(10012, 10013, 10014))
-zip.nbhd[[6]]=as.character(c(10004, 10005, 10006, 10007, 10038, 10280))
-zip.nbhd[[7]]=as.character(c(10002, 10003, 10009))
-zip.nbhd[[8]]=as.character(c(10021, 10028, 10044, 10065, 10075, 10128))
-zip.nbhd[[9]]=as.character(c(10023, 10024, 10025))
-zip.nbhd[[10]]=as.character(c(10031, 10032, 10033, 10034, 10040))
+color <- list(color1 = c('#F2D7D5','#D98880', '#CD6155', '#C0392B', '#922B21','#641E16'),
+              color2 = c('#e6f5ff','#abdcff', '#70c4ff', '#0087e6', '#005998','#00365d','#1B4F72'),
+              color3 = c("#F7FCF5","#74C476", "#005A32"))
 
-## Load housing data
-load("../output/count.RData")
-load("../output/mh2009use.RData")
 
-# Define server logic required to draw a histogram
-shinyServer(function(input, output) {
+getwd()
+shinyServer(function(input, output,session) {
   
-  ## Neighborhood name
-  output$text = renderText({"Selected:"})
-  output$text1 = renderText({
-      paste("{ ", man.nbhd[as.numeric(input$nbhd)+1], " }")
-  })
-  
-  ## Panel 1: summary plots of time trends, 
-  ##          unit price and full price of sales. 
-  
-  output$distPlot <- renderPlot({
-    
-    ## First filter data for selected neighborhood
-    mh2009.sel=mh2009.use
-    if(input$nbhd>0){
-      mh2009.sel=mh2009.use%>%
-                  filter(region %in% zip.nbhd[[as.numeric(input$nbhd)]])
-    }
-    
-    ## Monthly counts
-    month.v=as.vector(table(mh2009.sel$sale.month))
-    
-    ## Price: unit (per sq. ft.) and full
-    type.price=data.frame(bldg.type=c("10", "13", "25", "28"))
-    type.price.sel=mh2009.sel%>%
-                group_by(bldg.type)%>%
-                summarise(
-                  price.mean=mean(sale.price, na.rm=T),
-                  price.median=median(sale.price, na.rm=T),
-                  unit.mean=mean(unit.price, na.rm=T),
-                  unit.median=median(unit.price, na.rm=T),
-                  sale.n=n()
-                )
-    type.price=left_join(type.price, type.price.sel, by="bldg.type")
-    
-    ## Making the plots
-    layout(matrix(c(1,1,1,1,2,2,3,3,2,2,3,3), 3, 4, byrow=T))
-    par(cex.axis=1.3, cex.lab=1.5, 
-        font.axis=2, font.lab=2, col.axis="dark gray", bty="n")
-    
-    ### Sales monthly counts
-    plot(1:12, month.v, xlab="Months", ylab="Total sales", 
-         type="b", pch=21, col="black", bg="red", 
-         cex=2, lwd=2, ylim=c(0, max(month.v,na.rm=T)*1.05))
-    
-    ### Price per square foot
-    plot(c(0, max(type.price[,c(4,5)], na.rm=T)), 
-         c(0,5), 
-         xlab="Price per square foot", ylab="", 
-         bty="l", type="n")
-    text(rep(0, 4), 1:4+0.5, paste(c("coops", "condos", "luxury hotels", "comm. condos"), 
-                                  type.price$sale.n, sep=": "), adj=0, cex=1.5)
-    points(type.price$unit.mean, 1:nrow(type.price), pch=16, col=2, cex=2)
-    points(type.price$unit.median, 1:nrow(type.price),  pch=16, col=4, cex=2)
-    segments(type.price$unit.mean, 1:nrow(type.price), 
-              type.price$unit.median, 1:nrow(type.price),
-             lwd=2)    
-    
-    ### full price
-    plot(c(0, max(type.price[,-1], na.rm=T)), 
-         c(0,5), 
-         xlab="Sales Price", ylab="", 
-         bty="l", type="n")
-    text(rep(0, 4), 1:4+0.5, paste(c("coops", "condos", "luxury hotels", "comm. condos"), 
-                                   type.price$sale.n, sep=": "), adj=0, cex=1.5)
-    points(type.price$price.mean, 1:nrow(type.price), pch=16, col=2, cex=2)
-    points(type.price$price.median, 1:nrow(type.price),  pch=16, col=4, cex=2)
-    segments(type.price$price.mean, 1:nrow(type.price), 
-             type.price$price.median, 1:nrow(type.price),
-             lwd=2)    
-  })
-  
-  ## Panel 2: map of sales distribution
-  output$distPlot1 <- renderPlot({
-    count.df.sel=count.df
-    if(input$nbhd>0){
-      count.df.sel=count.df%>%
-        filter(region %in% zip.nbhd[[as.numeric(input$nbhd)]])
-    }
-    # make the map for selected neighhoods
-    
-    zip_choropleth(count.df.sel,
-                   title       = "2009 Manhattan housing sales",
-                   legend      = "Number of sales",
-                   county_zoom = 36061)
-  })
-  
-  ## Panel 3: leaflet
+  #Esri.WorldTopoMap
+  #########main map######
   output$map <- renderLeaflet({
-    count.df.sel=count.df
-    if(input$nbhd>0){
-      count.df.sel=count.df%>%
-        filter(region %in% zip.nbhd[[as.numeric(input$nbhd)]])
-    }
-    
-    # From https://data.cityofnewyork.us/Business/Zip-Code-Boundaries/i8iw-xf4u/data
-    NYCzipcodes <- readOGR("../data/ZIP_CODE_040114.shp",
-                           #layer = "ZIP_CODE", 
-                           verbose = FALSE)
-    
-    selZip <- subset(NYCzipcodes, NYCzipcodes$ZIPCODE %in% count.df.sel$region)
-    
-    # ----- Transform to EPSG 4326 - WGS84 (required)
-    subdat<-spTransform(selZip, CRS("+init=epsg:4326"))
-    
-    # ----- save the data slot
-    subdat_data=subdat@data[,c("ZIPCODE", "POPULATION")]
-    subdat.rownames=rownames(subdat_data)
-    subdat_data=
-      subdat_data%>%left_join(count.df, by=c("ZIPCODE" = "region"))
-    rownames(subdat_data)=subdat.rownames
-    
-    # ----- to write to geojson we need a SpatialPolygonsDataFrame
-    subdat<-SpatialPolygonsDataFrame(subdat, data=subdat_data)
-    
-    # ----- set uo color pallette https://rstudio.github.io/leaflet/colors.html
-    # Create a continuous palette function
-    pal <- colorNumeric(
-      palette = "Blues",
-      domain = subdat$POPULATION
-    )
-    
-    leaflet(subdat) %>%
-      addTiles()%>%
-      addPolygons(
-        stroke = T, weight=1,
-        fillOpacity = 0.6,
-        color = ~pal(POPULATION)
+    leaflet() %>%
+      addProviderTiles('Esri.WorldTopoMap') %>%
+      setView(lng = -73.971035, lat = 40.775659, zoom = 12) %>%
+      addMarkers(data=housing,
+                 lng=~lng,
+                 lat=~lat,
+                 clusterOptions=markerClusterOptions(),
+                 group="housing_cluster"
       )
   })
+  
+  
+  
+  #############Housing#############
+  
+  
+  # filter housing data:
+  
+  housingFilter=reactive({
+    bedroom_filter=housing$bedrooms>input$min_bedrooms 
+    bathroom_filter=housing$bathrooms>input$min_bathrooms
+    price_filter=housing$price>=input$min_price & housing$price<=input$max_price
+    filter=bedroom_filter & bathroom_filter & price_filter
+    return(housing[filter,])
+  })
+  
+  # show data in the map:
+  observe({leafletProxy("map")%>%clearGroup("housing_cluster")%>%
+      addMarkers(data=housingFilter(),
+                 lng=~lng,
+                 lat=~lat,
+                 clusterOptions=markerClusterOptions(),
+                 group="housing_cluster"
+      )
+  })
+  # show current status of icons:
+  showStatus=reactive({
+    if (is.null(input$map_bounds)){
+      return("cloud")
+      
+    }
+    else{
+      if(input$map_zoom<16){
+        return('cloud')
+      }
+      else{
+        return('details')
+      }
+    }
+  })
+  # hide and show clouds 
+  observe({
+    if(showStatus()=="cloud"){
+      
+      leafletProxy("map") %>%showGroup("housing_cluster")%>%clearGroup("new_added")
+    }
+    else{
+      leafletProxy("map") %>%hideGroup("housing_cluster")
+      
+    }
+  })
+  
+  
+  # get the housing data in the bounds
+  marksInBounds <- reactive({
+    if (is.null(input$map_bounds))
+      return(housing[FALSE,])
+    bounds <- input$map_bounds
+    latRng <- range(bounds$north, bounds$south)
+    lngRng <- range(bounds$east, bounds$west)
+    
+    return(
+      subset(housingFilter(),
+             lat>= latRng[1] & lat <= latRng[2] &
+               lng >= lngRng[1] & lng <= lngRng[2])
+    )
+  })
+  
+  # show housing details when zoom to one specific level
+  observe({
+    if(showStatus()=="details"){
+      if(nrow(marksInBounds())!=0){
+        leafletProxy("map")%>%clearGroup(group="new_added")%>% 
+          addCircleMarkers(data=marksInBounds(),
+                           lat=~lat,
+                           lng=~lng,
+                           label=~as.character(price),
+                           radius=5,
+                           stroke=FALSE,
+                           fillColor = "green",
+                           fillOpacity=0.7,
+                           group="new_added",
+                           labelOptions = labelOptions(
+                             noHide = T,
+                             offset=c(20,-15),
+                             opacity=0.7,
+                             direction="left",
+                             style=list(
+                               background="green",
+                               color="white"  
+                             )
+                           )
+          )
+      }
+      else{
+        leafletProxy("map")%>%clearGroup(group="new_added")
+      }
+    }
+  })
+  
+  
+  # sort housing in current zoom level
+  observe({
+    housing_sort=marksInBounds()
+
+    if(nrow(housing_sort)!=0){
+
+      action=apply(housing_sort,1,function(r){
+        addr=r["addr"]
+        lat=r["lat"]
+        lng=r["lng"]
+        paste0("<a class='go-map' href='' data-lat='",lat,"'data-lng='",lng,"'>",addr,'</a>')
+      }
+      )
+
+      housing_sort$addr=action
+      output$rank <- renderDataTable(housing_sort[,c("addr","price","bedrooms","bathrooms")],escape=F)
+
+    }
+    else{
+
+      output$rank=renderDataTable(housing_sort[,c("addr","price","bedrooms","bathrooms")])
+    }
+
+  })
+  
+  # When point in map is hovered, show a popup with housing info
+  observe({
+    
+    event <- input$map_marker_mouseover
+    if (is.null(event))
+      return()
+    if(showStatus()=="details"){
+      isolate({
+        showPopupHover(event$lat, event$lng,housing=housingFilter())
+      })  
+    }
+    
+  })
+  
+  # mouseout the point and cancel popup
+  observe({
+    
+    event <- input$map_marker_mouseout
+    if (is.null(event))
+      return()
+    
+    isolate({
+      leafletProxy("map") %>% clearPopups()
+    })
+  })
+  
+  # click name to go to that point
+  observe({
+    if (is.null(input$goto))
+      return()
+    isolate({
+      map <- leafletProxy("map")
+      
+      
+      
+      lat <- as.numeric(input$goto$lat)
+      lng <- as.numeric(input$goto$lng)
+      
+      map %>% setView(lng = lng, lat = lat, zoom = 16)
+    })
+  })
+  # hover the list to show info
+  observe({
+    if (is.null(input$showPop))
+      return()
+    isolate({
+      remove=as.numeric(input$showPop$remove)
+      map <- leafletProxy("map")
+      
+      if(remove==0){
+        
+        
+        
+        lat <- as.numeric(input$showPop$lat)
+        lng <- as.numeric(input$showPop$lng)
+        showPopupHover(lat, lng,housingFilter())   
+      }
+      else{
+        map %>% clearPopups()
+      }
+      
+      
+    })
+  })
+  
+  #############Search###############
+  observeEvent(input$button1,{
+    url = paste0('http://maps.google.com/maps/api/geocode/xml?address=',input$location,'&sensor=false')
+    doc = xmlTreeParse(url) 
+    root = xmlRoot(doc) 
+    lati = as.numeric(xmlValue(root[['result']][['geometry']][['location']][['lat']])) 
+    long = as.numeric(xmlValue(root[['result']][['geometry']][['location']][['lng']]))
+    
+    leafletProxy("map") %>%
+      setView(lng=long, lat=lati,zoom=15)%>%
+      addMarkers(lng=long,lat=lati,layerId = "1",icon=icons(
+        iconUrl = "../lib/icons8-Location-50.png",iconWidth = 25, iconHeight = 25))
+  })
+  
+  #############Reset for Panel 2############
+  observeEvent(input$button2,{
+    proxy<-leafletProxy("map")
+    proxy %>%
+      setView(lng = -73.971035, lat = 40.775659, zoom = 12) %>%
+      removeMarker(layerId="1") %>%
+      addMarkers(data=housing,
+                 lng=~lng,
+                 lat=~lat,
+                 clusterOptions=markerClusterOptions(),
+                 group="housing_cluster")
+    updateTextInput(session, inputId="location", value = "")
+    
+    updateSelectInput(session, "check2_class",selected="")
+    updateSelectInput(session, "check2_age",selected="")
+    updateSelectInput(session, "check2_crime",selected = "")
+    updateSelectInput(session, "check2_trans",selected = "")
+    updateSelectInput(session, "check2_rt",selected = "")
+  })
+  
+  
+  #############Clear button###########
+  observeEvent(input$clear, {
+    leafletProxy('map')%>% setView(lng = -73.971035, lat = 40.775659, zoom = 12)
+  })
+  
+  output$map <- renderLeaflet({
+    leaflet()%>%
+      setView(lng = -73.98928, lat = 40.75042, zoom = 13)%>%
+      addProviderTiles("OpenStreetMap.HOT")
+    
+  })
+  
+  
+  ## Panel *: heat map###########################################
+  # ----- set uo color pallette https://rstudio.github.io/leaflet/colors.html
+  # Create a continuous palette function
+  pal <- colorNumeric(
+    palette = "Greens",
+    domain = subdat$value
+  )
+  
+  output$map1 <- renderLeaflet({
+    leaflet(options = leafletOptions(zoomControl = FALSE))%>%
+      addProviderTiles('Esri.WorldTopoMap') %>%
+      setView(lng = -73.96, lat = 40.75042, zoom = 13)%>%
+      
+      addPolygons(layerId = ~ZIPCODE,data=subdat,
+                  stroke = T, weight=1,
+                  fillOpacity = 0.35,
+                  color = ~pal(value),
+                  highlightOptions = highlightOptions(color='#ff0000', opacity = 0.5, weight = 4, fillOpacity = 0.9,
+                                                      bringToFront = TRUE, sendToBack = TRUE))%>%
+      addLegend(data=subdat,pal = pal, values = ~value, opacity = 0.5)
+    
+  })
+  
+  ## Panel *: click on any area, popup text about this zipcode area's information#########
+  observeEvent(input$map_shape_click, {
+    ## track
+    if(input$click_multi == FALSE) leafletProxy('map1') %>%clearGroup("click")
+    click <- input$map_shape_click
+    leafletProxy('map1')%>%
+      addMarkers(click$lng, click$lat, group="click", icon=list(iconUrl='icon/leaves.png',iconSize=c(60,60)))
+    
+    ##info
+    zip_sel<-as.character(revgeocode(as.numeric(c(click$lng,click$lat)),output="more")$postal_code)
+    zip<-paste("ZIPCODE: ",zip_sel)
+    price_avg<-paste("Average Price: $",avg_price_zip.df[avg_price_zip.df$region==zip_sel,"value"],sep="")
+    
+    leafletProxy("map1")%>%
+      setView(click$lng,click$lat,zoom=14,options=list(animate=TRUE))
+    
+    output$zip_text<-renderText({zip})
+    output$avgprice_text<-renderText({price_avg})
+    
+  })
+  
+  
+  ## Panel *: Return to big view##################################
+  observeEvent(input$click_reset_buttom,{
+    if(input$click_reset_buttom){
+      leafletProxy("map1")%>%
+        setView(lng = -73.96, lat = 40.75042, zoom = 13)%>% 
+        clearPopups()
+    }
+  })
+  
+  ###Panel 2: Owner's Choice
+  
+  # areas  <- reactive({
+  #   cond.0 <- if(is.null(input$check2_ty)){paste0("Studio <= ", input$check2_pr, " |is.na(Studio) == TRUE")
+  #   } else if("Studio" %in% input$check2_ty){paste0("Studio <= ", input$check2_pr)
+  #   } else{"Studio <= 5400 |is.na(Studio) == TRUE"}
+  #   
+  #   cond.1 <- if(is.null(input$check2_ty)){paste0("X1B <= ", input$check2_pr, " |is.na(X1B) == TRUE")
+  #   } else if("1B" %in% input$check2_ty){paste0("X1B <= ", input$check2_pr)
+  #   } else{"X1B <= 5400 |is.na(X1B) == TRUE"}
+  #   
+  #   cond.2 <- if(is.null(input$check2_ty)){paste0("X2B <= ", input$check2_pr, " |is.na(X2B) == TRUE")
+  #   } else if("2B" %in% input$check2_ty) {paste0("X2B <= ", input$check2_pr)
+  #   } else{"X2B <= 5400 |is.na(X2B) == TRUE"}
+  #   
+  #   cond.3 <- if(is.null(input$check2_ty)){paste0("X3B <= ", input$check2_pr, " |is.na(X3B) == TRUE")
+  #   } else if("3B" %in% input$check2_ty) {paste0("X3B <= ", input$check2_pr)
+  #   } else{"X3B <= 5400 |is.na(X3B) == TRUE"}
+  #   
+  #   cond.4 <-  if(is.null(input$check2_ty)){paste0("X4B <= ", input$check2_pr, " |is.na(X4B) == TRUE")
+  #   } else if("4B" %in% input$check2_ty) {paste0("X4B <= ", input$check2_pr)
+  #   } else{"X4B <= 5400 |is.na(X4B) == TRUE"}
+  #   
+  #   cond.ame <- if(is.null(input$check2_re)){"ranking.American <= 46 |is.na(ranking.American) == TRUE"
+  #   } else if("American" %in% input$check2_re){"ranking.American <= 23"
+  #   } else {"ranking.American <= 46 |is.na(ranking.American) == TRUE"}
+  #   
+  #   cond.chi <- if(is.null(input$check2_re)){"ranking.Chinese <= 46 |is.na(ranking.Chinese) == TRUE"
+  #   } else if("Chinese" %in% input$check2_re) {"ranking.Chinese <= 23"
+  #   } else {"ranking.Chinese <= 46 |is.na(ranking.Chinese) == TRUE"}
+  #   
+  #   cond.ita <-  if(is.null(input$check2_re)){"ranking.Italian <= 46 |is.na(ranking.Italian) == TRUE"
+  #   } else if("Italian" %in% input$check2_re) {"ranking.Italian <= 23"
+  #   } else {"ranking.Italian <= 46 |is.na(ranking.Italian) == TRUE"}
+  #   
+  #   cond.jap <- if(is.null(input$check2_re)){"ranking.Japenses <= 46 |is.na(ranking.Japenses) == TRUE"
+  #   } else if("Japanese" %in% input$check2_re) {"ranking.Japenses <= 23"
+  #   } else {"ranking.Japenses <= 46 |is.na(ranking.Japenses) == TRUE"}
+  #   
+  #   cond.piz <- if(is.null(input$check2_re)){"ranking.Pizza <= 46 |is.na(ranking.Pizza) == TRUE"
+  #   } else if("Pizza" %in% input$check2_re) {"ranking.Pizza <= 23"
+  #   } else {"ranking.Pizza <= 46 |is.na(ranking.Pizza) == TRUE"}
+  #   
+  #   cond.oth <- if(is.null(input$check2_re)){"ranking.Others <= 46 |is.na(ranking.Others) == TRUE"
+  #   } else if("Others" %in% input$check2_re) {"ranking.Others <= 23"
+  #   } else {"ranking.Others <= 46 |is.na(ranking.Others) == TRUE"}
+  #   
+  #   trans.fil <- if(input$check2_tr == "It's everything."){
+  #     1:16
+  #   } else if(input$check2_tr == "Emmm."){
+  #     1:32
+  #   } else {
+  #     c(1:46, NA)
+  #   }
+  #   
+  #   club.fil <- if(input$check2_cb == "Let's party!"){1:16
+  #   } else if(input$check2_cb == "Drink one or two."){
+  #     1:32
+  #   } else {
+  #     c(1:46, NA)
+  #   }
+  #   
+  #   theatre.fil<- if(input$check2_ct == "Theatre goers."){1:16
+  #   } else if(input$check2_ct == "It depends."){
+  #     1:32
+  #   } else {
+  #     c(1:46, NA)
+  #   }
+  #   
+  #   market.fil <- if(input$check2_ma == "Love it!"){
+  #     1:16
+  #   } else if(input$check2_ma == "It depends."){
+  #     1:32
+  #   } else {
+  #     c(1:46, NA)
+  #   }
+  #   
+  #   areas <- (rank_all %>%
+  #               filter(eval(parse(text = cond.apt.0)), eval(parse(text = cond.apt.1)), eval(parse(text = cond.apt.2)),
+  #                      eval(parse(text = cond.apt.3)), eval(parse(text = cond.apt.4)),
+  #                      eval(parse(text = cond.ame)), eval(parse(text = cond.chi)), eval(parse(text = cond.ita)),
+  #                      eval(parse(text = cond.jap)), eval(parse(text = cond.piz)), eval(parse(text = cond.oth)),
+  #                      ranking.trans %in% trans.fil, ranking.bar %in% club.fil,
+  #                      ranking.theatre %in% theatre.fil, ranking.market %in% market.fil
+  #               ) %>%
+  #               select(zipcode))[,1]
+  #   return(areas)
+  # })
+  # 
+  # output$rank <- renderDataTable(show %>% 
+  #                                  filter(Zipcode %in% areas()),
+  #                                 options = list("sScrollX" = "100%", "bLengthChange" = FALSE))
+  
+  #############
+  ##map
+  # observe({
+  #   if(length(areas())!=0){
+  #     leafletProxy("map3")%>%clearGroup(group="new_added")%>% 
+  #       addPolygons(data=subset(subdat, subdat$ZIPCODE%in% areas()),
+  #                   weight = 2,
+  #                   color = "#34675C",
+  #                   fillColor = "#B3C100",
+  #                   fillOpacity=0.7,
+  #                   group="new_added",
+  #                   noClip = TRUE, label = ~ZIPCODE)
+  #   }
+  #   
+  #   else{
+  #     leafletProxy("map3")%>%clearGroup(group="new_added")
+  #   }
+  # })
+  
+  
 })
+
+
+
+
