@@ -53,22 +53,24 @@ shinyUI(
                                     # )),
                            column(3, h1("Characterize Your Restaurant")),
                            column(2, selectInput("check2_type", "Restaurant Type:", 
-                                                 c(" " = "", list("American", "Chinese", "Italian", "Japanese", "Pizza", "Others")))),
+                                                 c(" " = "", list("American", "Quick Meal", "Asian", "Chinese", "Dessert", "European", "Italian", 
+                                                                  "Mexican", "Seafood", "Others")), multiple=TRUE)),
                            column(3,
-                                  sliderInput("check2_ppr", "People Per Restaurant:",min = 0, max = 10000, value = 10000)),
+                                  sliderInput("check2_ppr", "People Per Restaurant:",min = 500, max = 10000, value = 500)),
                            column(2,
                                   selectInput("check2_class", "Residence Class:",c(" " = "", list("Upper", "Middle", "Working", "Lower")), 
                                               multiple=TRUE)),
                            column(2,
-                                  selectInput("check2_age", "Age Group:", c(" " = "", list("<18", "18-24", "25-29", "30-39", "40-49", "50+")),
+                                  selectInput("check2_age", "Age Targets :", c(" " = "", list("<5", "5-14", "15-24", "25-34", "35-44", "45-54", "55-64", "65+")),
                                               multiple=TRUE))
                          ),
                          
                          fluidRow(
                            column(3,
-                                  selectInput("check2_market","Market:", c(" " = "", list("1","2","3")))),
+                                  selectInput("check2_crime", "Crimes:", c("Acceptable number of crimes" = "", 
+                                                                           list("Very Safe", "Safe", "A Little Dangerous", "Dangerous")))),
                            column(3,
-                                  selectInput("check2_crime", "Crimes:", c("Acceptable number of crimes" = "", list("1", "2", "3")))),
+                                  selectInput("check2_market","Market:", c(" " = "", list("1","2","3")))),
                            column(2, selectInput("check2_trans", "Transportation:", c(" " = "", list("1","2","3")))),
                            column(2, selectInput("check2_ct", "Cinema/Theater:", 
                                                  c(" " = "", list("1","2","3")))),
@@ -82,10 +84,10 @@ shinyUI(
                            #column
                            
                            column(width=6, 
-                                  dataTableOutput("rank")
+                                  dataTableOutput("table2")
                            ),
                            column(width=5,
-                                  leafletOutput("map", width = "120%", height = 480),
+                                  leafletOutput("map3", width = "120%", height = 480),
                                   fluidRow(column(1,actionButton("click_back_buttom",label="Click here back to original view")))    
                            )
                          ) 
