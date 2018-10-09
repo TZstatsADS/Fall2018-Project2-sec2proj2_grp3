@@ -9,7 +9,7 @@
 Term: Spring 2018
 
 + Team 3#
-+ **Plan-a-Restaurant**: + Team members
++ **Plan-a-Restaurant**:
 	+ Oded Loewenstein
 	+ Yungsheng Ma
 	+ Yujia Wang
@@ -26,12 +26,12 @@ One of the main reason for this failure is choosing the wrong location. Private 
 **Our app intends to fill this void and provide such resources to future restaurant owners.**
 
 + **How it works**: 
-  Out app has two different features to help future restaurant owners: the first one provides a visulization of the location different locations in Manhattan accompanied by location statistics relevant to the owner's decision such as the types of restaurants in the area and the demographic diversification of the area.
-
-The second feature of our app is provide an option of a more detailed search, in which the future owner could zone-in on specific areas which are ideal for his restaurant: the type of restaurant and the target clientele of the restaurant, such as socio-economic class and age.
+  Our app has two different features to help future restaurant owners:
+  	+ **Map-it**:a visulization of the location different locations in Manhattan accompanied by location statistics relevant to the owner's decision such as the types of restaurants in the area and the demographic diversification of the area.
+	+ **Find-it**: The second feature of our app is provide an option of a more detailed search, in which the future owner could zone-in on specific areas which are ideal for his restaurant: the type of restaurant and the target clientele of the restaurant, such as socio-economic class and age.
 
 + **Data Source**: 
- We rely on many data sources mainly collect from [NYC open data]( https://opendata.cityofnewyork.us/) and [U.S. government open data](https://data.gov/).
+ We rely on many data sources mainly collected from [NYC open data]( https://opendata.cityofnewyork.us/) and [U.S. government open data](https://data.gov/).
  
 + **Contribution statement**: 
 We had a great experience working together on this project. We feel like the progress of our work was timely and efficient mainly due to great team work. We conducted many group meetings, brain stormed together on each functionality of our app and listened to every team member's thoughts. All team members were highly engaged in this project and conrtibuted equally.
@@ -48,4 +48,3 @@ proj/
 ```
 
 Please see each subfolder for a README file.
-
