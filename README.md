@@ -6,7 +6,7 @@
 
 
 ## Plan-a-Restaurant
-Term: Spring 2018
+Term: Fall 2018
 
 + Team 3#
 + **Plan-a-Restaurant**:
