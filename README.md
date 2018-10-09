@@ -22,7 +22,7 @@
 One of the riskiest businesses to open nowadays is the restaurant business. According to a study conducted by the [Perry Group](https://yourbusiness.azcentral.com/average-life-span-restaurant-6024.html), most restaurants close within their first year. Moreover, private restaurants have much lower success rate than restaurant chains. One of the main reason for this failure is choosing the wrong location. Private restaurant owners lack the resources chains have to optimally choose the location of their restaurant. While many apps provide optimal restaurant choices for the customer side, **Our app intends to provide the required information from the owner's perspective to the potential restaurant owner**
 
 + **How it works**: 
-  Our app has two different features to help future restaurant owners:
+  Our app has two different features to help future restaurant owners choose the restaurant's location:
   	+ **Map-it!**: 
 	a visulization tool of different locations in Manhattan (by zip code) accompanied by location statistics relevant to the future owner's decision process indcluding the restaurant types and the demographic diversification in the area.
 	+ **Find it!**:
