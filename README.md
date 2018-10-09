@@ -25,8 +25,8 @@ One of the riskiest businesses to open nowadays is the restaurant business. Acco
 
 + **How it works**: 
   Our app has two different features to help future restaurant owners:
-  	+ *Map-it!*: a visulization of the location different locations in Manhattan accompanied by location statistics relevant to the owner's decision such as the types of restaurants in the area and the demographic diversification of the area.
-	+ *Find it!*: The second feature of our app is provide an option of a more detailed search, in which the future owner could zone-in on specific areas which are ideal for his restaurant: the type of restaurant and the target clientele of the restaurant, such as socio-economic class and age.
+  	+ ***Map-it!***: a visulization of the location different locations in Manhattan accompanied by location statistics relevant to the owner's decision such as the types of restaurants in the area and the demographic diversification of the area.
+	+ ***Find it!***: The second feature of our app is provide an option of a more detailed search, in which the future owner could zone-in on specific areas which are ideal for his restaurant: the type of restaurant and the target clientele of the restaurant, such as socio-economic class and age.
 
 + **Data Source**: 
  We rely on many data sources mainly collected from [NYC open data]( https://opendata.cityofnewyork.us/) and [U.S. government open data](https://data.gov/).
