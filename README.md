@@ -20,9 +20,7 @@ Term: Spring 2018
 **Our planner is the perfect way to find the best location to your restaurant? try our [app]( https://adsproj2group14.shinyapps.io/perfectplanner/)** 
 
 + **Project summary**: 
-One of the riskiest businesses to open nowadays is the restaurant business. According to a study conducted by the [Perry Group](https://yourbusiness.azcentral.com/average-life-span-restaurant-6024.html), most restaurants close within their first year. Moreover, private restaurants have much lower success rate than restaurant chains.
-
-One of the main reason for this failure is choosing the wrong location. Private restaurant owners lack the resources chains have to optimally choose the location of their restaurant. 
+One of the riskiest businesses to open nowadays is the restaurant business. According to a study conducted by the [Perry Group](https://yourbusiness.azcentral.com/average-life-span-restaurant-6024.html), most restaurants close within their first year. Moreover, private restaurants have much lower success rate than restaurant chains. One of the main reason for this failure is choosing the wrong location. Private restaurant owners lack the resources chains have to optimally choose the location of their restaurant. 
 **Our app intends to fill this void and provide such resources to future restaurant owners.**
 
 + **How it works**: 
@@ -39,7 +37,7 @@ We had a great experience working together on this project. We feel like the pro
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 
 ```
-proj/
+Fall2018-Project2-sec2_proj2_gr3/
 ├── app/
 ├── lib/
 ├── data/
