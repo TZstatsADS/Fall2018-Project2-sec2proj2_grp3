@@ -37,7 +37,7 @@ We had a great experience working together on this project. We feel like the pro
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 
 ```
-Fall2018-Project2-sec2_proj2_gr3/
+proj/
 ├── app/
 ├── lib/
 ├── data/
