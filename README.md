@@ -2,7 +2,7 @@
 
 ### [Project Description](doc/project2_desc.md)
 
-![screenshot](doc/screenshot2.png)
+![screenshot](lib/Map-it!.png)
 
 
 ## Project Title Lorem ipsum dolor sit amet
