@@ -5,7 +5,7 @@
 ![screenshot](lib/Map-it!.png)
 
 
-## Project Title Lorem ipsum dolor sit amet
+## Plan-a-Restaurant
 Term: Spring 2018
 
 + Team 3#
