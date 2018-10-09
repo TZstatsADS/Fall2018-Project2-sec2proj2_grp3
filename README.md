@@ -6,7 +6,7 @@
 
 
 ## Plan-a-Restaurant
-+ Term: **Fall 2018**
++ **Term**: Fall 2018
 
 + **Team 3**:
 	+ Jiaxi Wu
