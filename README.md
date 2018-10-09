@@ -27,7 +27,7 @@ One of the main reason for this failure is choosing the wrong location. Private 
 
 + **How it works**: 
   Our app has two different features to help future restaurant owners:
-  	+ **Map-it**:a visulization of the location different locations in Manhattan accompanied by location statistics relevant to the owner's decision such as the types of restaurants in the area and the demographic diversification of the area.
+  	+ **Map-it**: a visulization of the location different locations in Manhattan accompanied by location statistics relevant to the owner's decision such as the types of restaurants in the area and the demographic diversification of the area.
 	+ **Find-it**: The second feature of our app is provide an option of a more detailed search, in which the future owner could zone-in on specific areas which are ideal for his restaurant: the type of restaurant and the target clientele of the restaurant, such as socio-economic class and age.
 
 + **Data Source**: 
