@@ -8,8 +8,7 @@
 ## Plan-a-Restaurant
 Term: Fall 2018
 
-+ Team #3
-+ **Plan-a-Restaurant**:
++ **Team 3**:
 	+ Jiaxi Wu
 	+ Oded Loewenstein
 	+ Yujia Wang
