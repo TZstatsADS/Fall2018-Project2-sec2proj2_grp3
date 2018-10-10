@@ -3,6 +3,7 @@
 ### [Project Description](doc/project2_desc.md)
 
 ![screenshot](lib/Map-it!.png)
+![screenshot](lib/Find-it!.png)
 
 
 ## Plan-a-Restaurant
