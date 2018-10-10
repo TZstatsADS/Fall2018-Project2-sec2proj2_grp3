@@ -86,8 +86,9 @@ shinyServer(function(input, output,session){
           df_age[i,2]<-as.character(colnames(row_age)[i+3])
           df_age[i,3]<-as.numeric(row_age[1,i+3])
         }
-        ap<- ggplot(df_age, aes(x=X1, y=X3, fill=X2))+ geom_bar(width = 1, stat = "identity")+theme(plot.margin=grid::unit(c(0,4,0,0), "mm"))
-        pie <- ap + coord_polar("y", start=0)+ylab("Age Distribution")+xlab("")+theme(legend.position="left")
+        colnames(df_age)[1] <-""
+        ap<- ggplot(df_age, aes(x="", y=X3, fill=X2))+ geom_bar(width = 1, stat = "identity")+theme(plot.margin=grid::unit(c(0,4,0,0), "mm"))
+        pie <- ap + coord_polar(theta="y")+ylab("Age Distribution")+xlab("")+theme(legend.position="left")
       
         pie_type<-pie_type[which(pie_type[,1]==as.character(click[1])),]
         pie2<-ggplot(data=pie_type, aes(x=Type, y=Percentage)) +geom_bar(stat="identity")+theme(plot.margin = unit(c(0.1,0.5,0.1,0.1), "cm"))+theme(axis.text.x = element_text(angle = 45, hjust = 1))+xlab("Restaurant Type")
