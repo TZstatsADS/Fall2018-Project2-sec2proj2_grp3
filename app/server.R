@@ -29,8 +29,8 @@ load("../data/housing.RData")
 source("../lib/showPopupHover.R")
 source("../lib/ZillowApi.R")
 
-filter_data <- read.csv("../data/filter_data_used.csv", as.is = T)
-table_display <- read.csv("../data/new_data/income.csv", as.is = T)
+filter_data <- read.csv("../output/filter_data_used.csv", as.is = T)
+table_display <- read.csv("../output/table_display.csv", as.is = T)
 
 color <- list(color1 = c('#F2D7D5','#D98880', '#CD6155', '#C0392B', '#922B21','#641E16'),
               color2 = c('#e6f5ff','#abdcff', '#70c4ff', '#0087e6', '#005998','#00365d','#1B4F72'),
@@ -323,7 +323,7 @@ shinyServer(function(input, output,session) {
     }
  })
   
-  ###Panel 2: Owner's Choice
+  ### Panel 2: Owner's Choice
 
   output$map3 <- renderLeaflet({
     leaflet() %>%
@@ -379,13 +379,17 @@ shinyServer(function(input, output,session) {
     } else if("Others" %in% input$check2_type){paste0("pop_other >= ", input$check2_ppr)
     } else{"pop_other >= 500 | is.na(pop_other) == TRUE"}
 
-    cond.class1 <- if("Upper" %in% input$check2_class){"class_1 == 1"} else {"is.na(class_1) == FALSE"}
+    cond.class1 <- if(is.null(input$check2_class)){"is.na(class_1) == FALSE"
+      } else if(!("Upper" %in% input$check2_class)){"class_1 == 0"} else {"is.na(class_1) == FALSE"}
 
-    cond.class2 <- if("Middle" %in% input$check2_class){"class_2 == 1"} else {"is.na(class_2) == FALSE"}
+    cond.class2 <- if(is.null(input$check2_class)){"is.na(class_2) == FALSE"
+      }else if(!("Middle" %in% input$check2_class)){"class_2 == 0"} else {"is.na(class_2) == FALSE"}
 
-    cond.class3 <- if("Working" %in% input$check2_class){"class_3 == 1"} else {"is.na(class_3) == FALSE"}
+    cond.class3 <- if(is.null(input$check2_class)){"is.na(class_3) == FALSE"
+      } else if(!("Working" %in% input$check2_class)){"class_3 == 0"} else {"is.na(class_3) == FALSE"}
 
-    cond.class4 <- if("Lower" %in% input$check2_class){"class_4 == 1"} else {"is.na(class_4) == FALSE"}
+    cond.class4 <- if(is.null(input$check2_class)){"is.na(class_4) == FALSE"
+      } else if(!("Lower" %in% input$check2_class)){"class_4 == 0"} else {"is.na(class_4) == FALSE"}
 
     cond.age1 <- if(is.null(input$check2_age)){"below5 <= 43 | is.na(below5) == TRUE"
     } else if("<5" %in% input$check2_age){"below5 <= 20"
@@ -393,7 +397,7 @@ shinyServer(function(input, output,session) {
 
     cond.age2 <- if(is.null(input$check2_re)){"X5_14 <= 43 | is.na(X5_14) == TRUE"
     } else if("5-14" %in% input$check2_re) {"X5_14 <= 20"
-    } else {"X5_14 <= 46 | is.na(X5_14) == TRUE"}
+    } else {"X5_14 <= 43 | is.na(X5_14) == TRUE"}
 
     cond.age3 <-  if(is.null(input$check2_re)){"X15_24 <= 43 | is.na(X15_24) == TRUE"
     } else if("15-24" %in% input$check2_re) {"X15_24 <= 20"
@@ -424,31 +428,30 @@ shinyServer(function(input, output,session) {
     } else if(input$check2_crime == "A Little Dangerous"){"crime_level == 'Safe' | crime_level == 'Relatively Safe' | crime_level == 'Relatively Dangerous'"
     } else {"is.na(crime_level) == FALSE"}
 
-  #   market.fil <- if(input$check2_market == "Love it!"){
-  #     1:16
-  #   } else if(input$check2_market == "It depends."){
-  #     1:32
-  #   } else {
-  #     c(1:46, NA)
-  #   }
+    market.fil <- if(input$check2_market == "Many"){
+      40
+    } else if(input$check2_market == "A few"){
+      21
+    } else {
+      0
+    }
     
-    trans.fil <- if(input$check2_trans == "1"){
+    trans.fil <- if(input$check2_trans == "Many"){
       25
-    } else if(input$check2_trans == "2"){
+    } else if(input$check2_trans == "A few"){
       15
     } else {
       1
     }
-  #   
-  #   
-  #   theatre.fil<- if(input$check2_ct == "Theatre goers."){1:16
-  #   } else if(input$check2_ct == "It depends."){
-  #     1:32
-  #   } else {
-  #     c(1:46, NA)
-  #   }
-  #   
-  #   
+
+    theatre.fil <- if(input$check2_ct == "Many"){
+      10
+    } else if(input$check2_ct == "A few"){
+      5
+    } else {
+      0
+    }
+
     areas <- (filter_data %>%
                 filter(eval(parse(text = cond.0)), eval(parse(text = cond.1)), eval(parse(text = cond.2)), eval(parse(text = cond.3)),
                        eval(parse(text = cond.4)), eval(parse(text = cond.5)), eval(parse(text = cond.6)), eval(parse(text = cond.7)),
@@ -459,36 +462,73 @@ shinyServer(function(input, output,session) {
                        eval(parse(text = cond.age4)), eval(parse(text = cond.age5)), eval(parse(text = cond.age6)),
                        eval(parse(text = cond.age7)), eval(parse(text = cond.age8)),
                        eval(parse(text = cond.crime)),
-                       Transportation.stations > trans.fil
-                  # ranking.trans %in% trans.fil, ranking.bar %in% club.fil,
-                  # ranking.theatre %in% theatre.fil, ranking.market %in% market.fil
+                       Transportation.stations >= trans.fil, markets >= market.fil, (Theatre >= theatre.fil | is.na(Theatre) == TRUE)
                 ) %>%
                 select(zipcode))[,1]
     return(areas)
   })
   
-  output$table2 <- renderDataTable(filter_data[,c(1,2,12,30:35,37,38)] %>% 
+  col_display <- reactive({
+    columns <- names(table_display)[22:29]
+    
+    if("Others" %in% input$check2_type){
+      columns <- c("Pop.Others", "Prop.Others", columns)
+    } 
+    if("Seafood" %in% input$check2_type){
+      columns <- c("Pop.Seafood", "Prop.Seafood", columns)
+    } 
+    if("Mexiacan" %in% input$check2_type){
+      columns <- c("Pop.Mexiacan", "Prop.Mexiacan", columns)
+    } 
+    if("Italian" %in% input$check2_type){
+      columns <- c("Pop.Italian", "Prop.Italian", columns)
+    } 
+    if("European" %in% input$check2_type){
+      columns <- c("Pop.European", "Prop.European", columns)
+    }
+    if("Dessert" %in% input$check2_type){
+      columns <- c("Pop.Dessert", "Prop.Dessert", columns)
+    }
+    if("Chinese" %in% input$check2_type){
+      columns <- c("Pop.Chinese", "Prop.Chinese", columns)
+    } 
+    if("Asian" %in% input$check2_type){
+      columns <- c("Pop.Asian", "Prop.Asian", columns)
+    } 
+    if("Quick Meal" %in% input$check2_type){
+      columns <- c("Pop.QuickMeal", "Prop.QuickMeal", columns)
+    } 
+    if("American" %in% input$check2_type){
+      columns <- c("Pop.American", "Prop.American", columns)
+    } 
+    
+    columns <- c("zipcode", columns)
+    
+    return(columns)
+  })
+  
+  output$table2 <- renderDataTable(table_display[, names(table_display) %in% col_display()] %>% 
                                      filter(
                                        zipcode %in% areas()), 
                                    options = list("sScrollX" = "100%", "bLengthChange" = FALSE))
  
   # Panel 2 Map
-  # observe({
-  #   if(length(areas())!=0){
-  #     leafletProxy("map3")%>%clearGroup(group="new_added")%>%
-  #       addPolygons(data=subset(subdat, subdat$ZIPCODE%in% areas()),
-  #                   weight = 2,
-  #                   color = "#34675C",
-  #                   fillColor = "#B3C100",
-  #                   fillOpacity=0.7,
-  #                   group="new_added",
-  #                   noClip = TRUE, label = ~ZIPCODE)
-  #   }
-  # 
-  #   else{
-  #     leafletProxy("map3")%>%clearGroup(group="new_added")
-  #   }
-  # })
+  observe({
+    if(length(areas())!=0){
+      leafletProxy("map3")%>%clearGroup(group="new_added")%>%
+        addPolygons(data=subset(subdat, subdat$ZIPCODE%in% areas()),
+                    weight = 2,
+                    color = "#34675C",
+                    fillColor = "#B3C100",
+                    fillOpacity=0.7,
+                    group="new_added",
+                    noClip = TRUE, label = ~ZIPCODE)
+    }
+
+    else{
+      leafletProxy("map3")%>%clearGroup(group="new_added")
+    }
+  })
   
   #############Reset for Panel 2############
   observeEvent(input$button2,{
@@ -502,6 +542,7 @@ shinyServer(function(input, output,session) {
     updateSelectInput(session, "check2_class",selected = "")
     updateSelectInput(session, "check2_age",selected="")
     updateSelectInput(session, "check2_crime",selected = "")
+    updateSelectInput(session, "check2_market",selected = "")
     updateSelectInput(session, "check2_trans",selected = "")
     updateSelectInput(session, "check2_ct",selected = "")
   })
