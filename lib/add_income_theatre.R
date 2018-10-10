@@ -16,4 +16,10 @@ new_filter$class_2[new_filter$income_rank < 25 & new_filter$income_rank >= 9] <-
 new_filter$class_3[new_filter$income_rank <= 31 & new_filter$income_rank >= 25] <- 1
 new_filter$class_4[new_filter$income_rank > 31 ] <- 1
 
+new_filter[,2:11] <- round(new_filter[,2:11], 0)
+new_filter[,12:21] <- round(new_filter[,12:21], 2)
+new_filter[,30] <- round(new_filter[,30], 0)
+new_filter[,32] <- round(new_filter[,32], 2)
+new_filter[,37] <- round(new_filter[,37], 1)
+
 write.csv(new_filter, file = "../output/filter_data_used.csv", row.names = FALSE)

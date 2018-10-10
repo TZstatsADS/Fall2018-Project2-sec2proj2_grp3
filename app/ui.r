@@ -87,7 +87,7 @@ shinyUI(
                            ),
                            column(width=5,
                                   leafletOutput("map3", width = "120%", height = 480),
-                                  fluidRow(column(1,actionButton("click_back_buttom",label="Click here back to original view")))    
+                                  fluidRow(column(1,actionButton("click_back_button",label="Click here back to original view")))    
                            )
                          ) 
                          )

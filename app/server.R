@@ -30,7 +30,7 @@ source("../lib/showPopupHover.R")
 source("../lib/ZillowApi.R")
 
 filter_data <- read.csv("../output/filter_data_used.csv", as.is = T)
-table_display <- read.csv("../output/table_display.csv", as.is = T)
+table_display <- read.csv("../output/table_display.csv", as.is = T, check.names = FALSE)
 
 color <- list(color1 = c('#F2D7D5','#D98880', '#CD6155', '#C0392B', '#922B21','#641E16'),
               color2 = c('#e6f5ff','#abdcff', '#70c4ff', '#0087e6', '#005998','#00365d','#1B4F72'),
@@ -392,35 +392,35 @@ shinyServer(function(input, output,session) {
       } else if(!("Lower" %in% input$check2_class)){"class_4 == 0"} else {"is.na(class_4) == FALSE"}
 
     cond.age1 <- if(is.null(input$check2_age)){"below5 <= 43 | is.na(below5) == TRUE"
-    } else if("<5" %in% input$check2_age){"below5 <= 20"
+    } else if("<5" %in% input$check2_age){"below5 <= 30"
     } else {"below5 <= 43 | is.na(below5) == TRUE"}
 
-    cond.age2 <- if(is.null(input$check2_re)){"X5_14 <= 43 | is.na(X5_14) == TRUE"
-    } else if("5-14" %in% input$check2_re) {"X5_14 <= 20"
+    cond.age2 <- if(is.null(input$check2_age)){"X5_14 <= 43 | is.na(X5_14) == TRUE"
+    } else if("5-14" %in% input$check2_age) {"X5_14 <= 30"
     } else {"X5_14 <= 43 | is.na(X5_14) == TRUE"}
 
-    cond.age3 <-  if(is.null(input$check2_re)){"X15_24 <= 43 | is.na(X15_24) == TRUE"
-    } else if("15-24" %in% input$check2_re) {"X15_24 <= 20"
+    cond.age3 <-  if(is.null(input$check2_age)){"X15_24 <= 43 | is.na(X15_24) == TRUE"
+    } else if("15-24" %in% input$check2_age) {"X15_24 <= 30"
     } else {"X15_24 <= 43 | is.na(X15_24) == TRUE"}
 
-    cond.age4 <- if(is.null(input$check2_re)){"X25_34 <= 43 | is.na(X25_34) == TRUE"
-    } else if("25-34" %in% input$check2_re) {"X25_34 <= 20"
+    cond.age4 <- if(is.null(input$check2_age)){"X25_34 <= 43 | is.na(X25_34) == TRUE"
+    } else if("25-34" %in% input$check2_age) {"X25_34 <= 30"
     } else {"X25_34 <= 43 | is.na(X25_34) == TRUE"}
 
-    cond.age5 <- if(is.null(input$check2_re)){"X35_44 <= 43 | is.na(X35_44) == TRUE"
-    } else if("35-44" %in% input$check2_re) {"X35_44 <= 20"
+    cond.age5 <- if(is.null(input$check2_age)){"X35_44 <= 43 | is.na(X35_44) == TRUE"
+    } else if("35-44" %in% input$check2_age) {"X35_44 <= 30"
     } else {"X35_44 <= 43 | is.na(X35_44) == TRUE"}
 
-    cond.age6 <- if(is.null(input$check2_re)){"X45_54 <= 43 | is.na(X45_54) == TRUE"
-    } else if("45-54" %in% input$check2_re) {"X45_54 <= 20"
+    cond.age6 <- if(is.null(input$check2_age)){"X45_54 <= 43 | is.na(X45_54) == TRUE"
+    } else if("45-54" %in% input$check2_age) {"X45_54 <= 30"
     } else {"X45_54 <= 43 |is.na(X45_54) == TRUE"}
 
-    cond.age7 <- if(is.null(input$check2_re)){"X55_64 <= 43 | is.na(X55_64) == TRUE"
-    } else if("55-64" %in% input$check2_re) {"X55_64 <= 20"
+    cond.age7 <- if(is.null(input$check2_age)){"X55_64 <= 43 | is.na(X55_64) == TRUE"
+    } else if("55-64" %in% input$check2_age) {"X55_64 <= 30"
     } else {"X55_64 <= 43 | is.na(X55_64) == TRUE"}
 
-    cond.age8 <- if(is.null(input$check2_re)){"X65above <= 43 | is.na(X65above) == TRUE"
-    } else if("65+" %in% input$check2_re) {"X65above <= 20"
+    cond.age8 <- if(is.null(input$check2_age)){"X65above <= 43 | is.na(X65above) == TRUE"
+    } else if("65+" %in% input$check2_age) {"X65above <= 30"
     } else {"X65above <= 43 | is.na(X65above) == TRUE"}
 
     cond.crime <- if(input$check2_crime == "Very Safe"){"crime_level == 'Safe'"
@@ -469,47 +469,46 @@ shinyServer(function(input, output,session) {
   })
   
   col_display <- reactive({
-    columns <- names(table_display)[22:29]
+    columns <- names(table_display)[22:30]
     
     if("Others" %in% input$check2_type){
-      columns <- c("Pop.Others", "Prop.Others", columns)
+      columns <- c("People/Others", "Others Proportion", columns)
     } 
     if("Seafood" %in% input$check2_type){
-      columns <- c("Pop.Seafood", "Prop.Seafood", columns)
+      columns <- c("People/Seafood", "Seafood Proportion", columns)
     } 
     if("Mexiacan" %in% input$check2_type){
-      columns <- c("Pop.Mexiacan", "Prop.Mexiacan", columns)
+      columns <- c("People/Mexiacan", "Mexiacan Proportion", columns)
     } 
     if("Italian" %in% input$check2_type){
-      columns <- c("Pop.Italian", "Prop.Italian", columns)
+      columns <- c("People/Italian", "Italian Proportion", columns)
     } 
     if("European" %in% input$check2_type){
-      columns <- c("Pop.European", "Prop.European", columns)
+      columns <- c("People/European", "European Proportion", columns)
     }
     if("Dessert" %in% input$check2_type){
-      columns <- c("Pop.Dessert", "Prop.Dessert", columns)
+      columns <- c("People/Dessert", "Dessert Proportion", columns)
     }
     if("Chinese" %in% input$check2_type){
-      columns <- c("Pop.Chinese", "Prop.Chinese", columns)
+      columns <- c("People/Chinese", "Chinese Proportion", columns)
     } 
     if("Asian" %in% input$check2_type){
-      columns <- c("Pop.Asian", "Prop.Asian", columns)
+      columns <- c("People/Asian", "Asian Proportion", columns)
     } 
     if("Quick Meal" %in% input$check2_type){
-      columns <- c("Pop.QuickMeal", "Prop.QuickMeal", columns)
+      columns <- c("People/QuickMeal", "QuickMeal Proportion", columns)
     } 
     if("American" %in% input$check2_type){
-      columns <- c("Pop.American", "Prop.American", columns)
+      columns <- c("People/American", "American Proportion", columns)
     } 
     
-    columns <- c("zipcode", columns)
-    
+    columns <- c("Zipcode", columns)
     return(columns)
   })
   
   output$table2 <- renderDataTable(table_display[, names(table_display) %in% col_display()] %>% 
                                      filter(
-                                       zipcode %in% areas()), 
+                                       Zipcode %in% areas()), 
                                    options = list("sScrollX" = "100%", "bLengthChange" = FALSE))
  
   # Panel 2 Map
@@ -524,7 +523,6 @@ shinyServer(function(input, output,session) {
                     group="new_added",
                     noClip = TRUE, label = ~ZIPCODE)
     }
-
     else{
       leafletProxy("map3")%>%clearGroup(group="new_added")
     }
@@ -541,7 +539,7 @@ shinyServer(function(input, output,session) {
     updateSelectInput(session, "check2_type",selected="")
     updateSelectInput(session, "check2_class",selected = "")
     updateSelectInput(session, "check2_age",selected="")
-    updateSelectInput(session, "check2_crime",selected = "")
+    updateSelectInput(session, "check2_crime",selected = "Acceptable number of crimes")
     updateSelectInput(session, "check2_market",selected = "")
     updateSelectInput(session, "check2_trans",selected = "")
     updateSelectInput(session, "check2_ct",selected = "")
