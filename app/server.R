@@ -1,433 +1,232 @@
-# library(shiny)
-# library(leaflet)
-# library(data.table)
-# library(devtools)
-# library(MASS)
-# library(dplyr)
-# library(tigris)
-# library(sp)
-# library(maptools)
-# library(broom)
-# library(httr)
-# library(rgdal)
-# library(RColorBrewer)
-# library(XML)
-# library(DT)
-# library(tidyr)
-# library(ggplot2)
-# library(ggmap)
-
-library(ggmap)
-library(ggplot2)
+library(shiny)
+library(leaflet)
+library(data.table)
+library(devtools)
+library(MASS)
 library(dplyr)
+library(tigris)
+library(sp)
+library(maptools)
+library(broom)
+library(httr)
+library(rgdal)
+library(RColorBrewer)
+library(XML)
 library(DT)
-
-
-load("../data/avg_price_zip.RData")
+library(tidyr)
+library(ggplot2)
+library(ggmap)
+library(sp)
+library(maptools)
+library(dmm)
+library(gridExtra)
+restaurant<-read.csv("../data/restaurant_new2.csv")
+income<-read.csv("../data/income1.csv")
+yelp.rate<-read.csv("../data/zip.rate1.csv")
+age_sex<-read.csv("../data/age_sex - new2.csv", header = T)
+pie_type<-read.csv("../data/zip.prop2.csv")
 load("../data/subdat.RData")
-load("../data/housing.RData")  
-source("../lib/showPopupHover.R")
-source("../lib/ZillowApi.R")
 
 filter_data <- read.csv("../output/filter_data_used.csv", as.is = T)
 table_display <- read.csv("../output/table_display.csv", as.is = T, check.names = FALSE)
-
-color <- list(color1 = c('#F2D7D5','#D98880', '#CD6155', '#C0392B', '#922B21','#641E16'),
-              color2 = c('#e6f5ff','#abdcff', '#70c4ff', '#0087e6', '#005998','#00365d','#1B4F72'),
-              color3 = c("#F7FCF5","#74C476", "#005A32"))
 
 shinyServer(function(input, output,session) {
   
   #Esri.WorldTopoMap
   #########main map######
   output$map <- renderLeaflet({
-    leaflet() %>%
-      addProviderTiles('Esri.WorldTopoMap') %>%
-      setView(lng = -73.971035, lat = 40.775659, zoom = 12) %>%
-      addMarkers(data=housing,
-                 lng=~lng,
-                 lat=~lat,
-                 clusterOptions=markerClusterOptions(),
-                 group="housing_cluster"
-      )
-  })
-
-
-
-  #############Housing#############
-
-
-  # filter housing data:
-
-  housingFilter=reactive({
-    bedroom_filter=housing$bedrooms>input$min_bedrooms
-    bathroom_filter=housing$bathrooms>input$min_bathrooms
-    price_filter=housing$price>=input$min_price & housing$price<=input$max_price
-    filter=bedroom_filter & bathroom_filter & price_filter
-    return(housing[filter,])
-  })
-
-  # show data in the map:
-  observe({leafletProxy("map")%>%clearGroup("housing_cluster")%>%
-      addMarkers(data=housingFilter(),
-                 lng=~lng,
-                 lat=~lat,
-                 clusterOptions=markerClusterOptions(),
-                 group="housing_cluster"
-      )
-  })
-  # show current status of icons:
-  showStatus=reactive({
-    if (is.null(input$map_bounds)){
-      return("cloud")
-
-    }
-    else{
-      if(input$map_zoom<16){
-        return('cloud')
-      }
-      else{
-        return('details')
-      }
-    }
-  })
-  # hide and show clouds
-  observe({
-    if(showStatus()=="cloud"){
-
-      leafletProxy("map") %>%showGroup("housing_cluster")%>%clearGroup("new_added")
-    }
-    else{
-      leafletProxy("map") %>%hideGroup("housing_cluster")
-
-    }
-  })
-
-
-  # get the housing data in the bounds
-  marksInBounds <- reactive({
-    if (is.null(input$map_bounds))
-      return(housing[FALSE,])
-    bounds <- input$map_bounds
-    latRng <- range(bounds$north, bounds$south)
-    lngRng <- range(bounds$east, bounds$west)
-
-    return(
-      subset(housingFilter(),
-             lat>= latRng[1] & lat <= latRng[2] &
-               lng >= lngRng[1] & lng <= lngRng[2])
-    )
-  })
-
-  # show housing details when zoom to one specific level
-  observe({
-    if(showStatus()=="details"){
-      if(nrow(marksInBounds())!=0){
-        leafletProxy("map")%>%clearGroup(group="new_added")%>%
-          addCircleMarkers(data=marksInBounds(),
-                           lat=~lat,
-                           lng=~lng,
-                           label=~as.character(price),
-                           radius=5,
-                           stroke=FALSE,
-                           fillColor = "green",
-                           fillOpacity=0.7,
-                           group="new_added",
-                           labelOptions = labelOptions(
-                             noHide = T,
-                             offset=c(20,-15),
-                             opacity=0.7,
-                             direction="left",
-                             style=list(
-                               background="green",
-                               color="white"
-                             )
-                           )
-          )
-      }
-      else{
-        leafletProxy("map")%>%clearGroup(group="new_added")
-      }
-    }
-  })
-
-
-  # sort housing in current zoom level
-  observe({
-    housing_sort=marksInBounds()
-
-    if(nrow(housing_sort)!=0){
-
-      action=apply(housing_sort,1,function(r){
-        addr=r["addr"]
-        lat=r["lat"]
-        lng=r["lng"]
-        paste0("<a class='go-map' href='' data-lat='",lat,"'data-lng='",lng,"'>",addr,'</a>')
-      }
-      )
-
-      housing_sort$addr=action
-      output$rank <- renderDataTable(housing_sort[,c("addr","price","bedrooms","bathrooms")],escape=F)
-
-    }
-    else{
-
-      output$rank=renderDataTable(housing_sort[,c("addr","price","bedrooms","bathrooms")])
-    }
-
-  })
-
-  # When point in map is hovered, show a popup with housing info
-  observe({
-
-    event <- input$map_marker_mouseover
-    if (is.null(event))
-      return()
-    if(showStatus()=="details"){
-      isolate({
-        showPopupHover(event$lat, event$lng,housing=housingFilter())
-      })
-    }
-
-  })
-
-  # mouseout the point and cancel popup
-  observe({
-
-    event <- input$map_marker_mouseout
-    if (is.null(event))
-      return()
-
-    isolate({
-      leafletProxy("map") %>% clearPopups()
-    })
-  })
-
-  # click name to go to that point
-  observe({
-    if (is.null(input$goto))
-      return()
-    isolate({
-      map <- leafletProxy("map")
-
-
-
-      lat <- as.numeric(input$goto$lat)
-      lng <- as.numeric(input$goto$lng)
-
-      map %>% setView(lng = lng, lat = lat, zoom = 16)
-    })
-  })
-  # hover the list to show info
-  observe({
-    if (is.null(input$showPop))
-      return()
-    isolate({
-      remove=as.numeric(input$showPop$remove)
-      map <- leafletProxy("map")
-
-      if(remove==0){
-
-
-
-        lat <- as.numeric(input$showPop$lat)
-        lng <- as.numeric(input$showPop$lng)
-        showPopupHover(lat, lng,housingFilter())
-      }
-      else{
-        map %>% clearPopups()
-      }
-
-
-    })
-  })
-
-  #############Search###############
-  observeEvent(input$button1,{
-    url = paste0('http://maps.google.com/maps/api/geocode/xml?address=',input$location,'&sensor=false')
-    doc = xmlTreeParse(url)
-    root = xmlRoot(doc)
-    lati = as.numeric(xmlValue(root[['result']][['geometry']][['location']][['lat']]))
-    long = as.numeric(xmlValue(root[['result']][['geometry']][['location']][['lng']]))
-
-    leafletProxy("map") %>%
-      setView(lng=long, lat=lati,zoom=15)%>%
-      addMarkers(lng=long,lat=lati,layerId = "1",icon=icons(
-        iconUrl = "../lib/icons8-Location-50.png",iconWidth = 25, iconHeight = 25))
-  })
-
-  #############Clear button###########
-  observeEvent(input$clear, {
-    leafletProxy('map')%>% setView(lng = -73.971035, lat = 40.775659, zoom = 12)
-  })
-
-  output$map <- renderLeaflet({
-    leaflet()%>%
+    leaflet(options = leafletOptions(zoomControl = FALSE))%>%
       setView(lng = -73.98928, lat = 40.75042, zoom = 13)%>%
       addProviderTiles("OpenStreetMap.HOT")
-
   })
-
-
-  ## Panel *: heat map###########################################
-  # ----- set uo color pallette https://rstudio.github.io/leaflet/colors.html
-  # Create a continuous palette function
+  
   pal <- colorNumeric(
     palette = "Greens",
     domain = subdat$value
   )
-
-  output$map1 <- renderLeaflet({
-    leaflet(options = leafletOptions(zoomControl = FALSE))%>%
-      addProviderTiles('Esri.WorldTopoMap') %>%
-      setView(lng = -73.96, lat = 40.75042, zoom = 13)%>%
-
-      addPolygons(layerId = ~ZIPCODE,data=subdat,
-                  stroke = T, weight=1,
-                  fillOpacity = 0.35,
-                  color = ~pal(value),
-                  highlightOptions = highlightOptions(color='#ff0000', opacity = 0.5, weight = 4, fillOpacity = 0.9,
-                                                      bringToFront = TRUE, sendToBack = TRUE))%>%
-      addLegend(data=subdat,pal = pal, values = ~value, opacity = 0.5)
-
-  })
-
-  ## Panel *: click on any area, popup text about this zipcode area's information#########
+  
+  leafletProxy("map",data=subdat)%>%
+    addPolygons(layerId = ~ZIPCODE,
+                stroke = T, weight=1,
+                fillOpacity = 0.3,
+                color = ~pal(value),
+                highlightOptions = highlightOptions(color='#ff1900', opacity = 0.3, weight = 2, fillOpacity = 0.4,
+                                                    bringToFront = TRUE, sendToBack = TRUE))
+  
+  ###Reactions when click the polygon
   observeEvent(input$map_shape_click, {
-    ## track
-    if(input$click_multi == FALSE) leafletProxy('map1') %>%clearGroup("click")
     click <- input$map_shape_click
-    leafletProxy('map1')%>%
-      addMarkers(click$lng, click$lat, group="click", icon=list(iconUrl='icon/leaves.png',iconSize=c(60,60)))
-
-    ##info
-    zip_sel<-as.character(revgeocode(as.numeric(c(click$lng,click$lat)),output="more")$postal_code)
-    zip<-paste("ZIPCODE: ",zip_sel)
-    price_avg<-paste("Average Price: $",avg_price_zip.df[avg_price_zip.df$region==zip_sel,"value"],sep="")
-
-    leafletProxy("map1")%>%
-      setView(click$lng,click$lat,zoom=14,options=list(animate=TRUE))
-
+    ##Zoom in
+    leafletProxy("map")%>%
+      setView(click$lng,click$lat,zoom=15,options=list(animate=TRUE))
+    
+    ##Show average statistics
+    #Zip Code
+    zip<-paste("Zipcode: ",as.character(click[1]))
     output$zip_text<-renderText({zip})
-    output$avgprice_text<-renderText({price_avg})
+    #Median Income
+    income$Median_income <- as.numeric(as.character(income$Median_income))
+    Med_income<-paste("Median Income: $",income[which(income$ZIP==as.character(click[1])),]$Median_income,sep="")
+    output$med_income_text<-renderText({Med_income})
+    #Population Density
+    Total_population<-paste("Total population (in k's): ",age_sex[which(age_sex[,1]==as.character(click[1])),]$Total_Population,sep="")
+    output$Total_population<-renderText({Total_population})
+    #Female percentage
+    Female.per<-paste("Female Ratio: ", round(age_sex[which(age_sex[,1]==as.character(click[1])),]$Female.per,2),sep="")
+    output$Female.per<-renderText({Female.per})
+    #Yelp rate
+    yelp.rate<-paste("Average Yelp Rating: ", yelp.rate[which(yelp.rate[,1]==as.character(click[1])),]$Yelp_star,sep="")
+    output$yelp.rate<-renderText({yelp.rate})
+    #Age group percentage and restaurant type
+    row_age<-age_sex[which(age_sex[,1]==as.character(click[1])),]
+    df_age<-data.frame(matrix(NA, nrow = 8, ncol = 3))
+    output$pie_age_rest <- renderPlot({
+      for(i in 1:8){
+        df_age[i,1]<-as.numeric(i)
+        df_age[i,2]<-as.character(colnames(row_age)[i+3])
+        df_age[i,3]<-as.numeric(row_age[1,i+3])
+      }
+      colnames(df_age)[1]<-""
+      ap<- ggplot(df_age, aes(x="", y=X3, fill=X2))+ geom_bar(width = 1, stat = "identity")+theme(plot.margin=grid::unit(c(0,4,0,0), "mm")) + theme_void()
+      pie <- ap + coord_polar("y", start=0)+xlab("")+ylab("")+theme(legend.position="left")+ggtitle("Age Distribution")+theme(plot.title = element_text(hjust = 0.5, face = "bold"))+labs(fill = "Age Groups")
 
+      pie_type<-pie_type[which(pie_type[,1]==as.character(click[1])),]
+      pie2<-ggplot(data=pie_type, aes(x=Type, y=Percentage)) +geom_bar(stat="identity", fill = "darkblue")+theme(plot.margin = unit(c(0.1,0.5,0.1,0.1), "cm"))+theme_classic()+theme(axis.text.x = element_text(angle = 45, hjust = 1))+ theme(legend.position="none")+xlab("Restaurant Type")+ylab("% of all restaurants")+ggtitle("Retaurant Type Distribution")+theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+      
+      pie_age_rest<-grid.arrange(pie2, pie, nrow = 2)
+      pie_age_rest},height = 450, res = 72)
+  })#Observe1
+  
+  dataInput <- reactive({
+    restaurant[which(restaurant$ZIP == input$map_shape_click[1]),]
   })
-
-
-  ## Panel *: Return to big view##################################
-  observeEvent(input$click_reset_buttom,{
-    if(input$click_reset_buttom){
-      leafletProxy("map1")%>%
-        setView(lng = -73.96, lat = 40.75042, zoom = 13)%>%
-        clearPopups()
-    }
- })
+  
+  ###Show data labels    
+  observeEvent(input$map_shape_click,{
+    leafletProxy('map',data = dataInput())%>%clearGroup("new")%>%
+      addCircleMarkers(
+        lat=~LAT,
+        lng=~LON,
+        label=~as.character(NAME),
+        radius=5,
+        stroke=FALSE,
+        fillColor = "green",
+        fillOpacity=0.7,
+        group="new",
+        labelOptions = labelOptions(
+          noHide = T,
+          offset=c(20,-15),
+          opacity=0.7,
+          direction="left",
+          style=list(
+            background="green",
+            color="white"  )))})
   
   ### Panel 2: Owner's Choice
-
+  
   output$map3 <- renderLeaflet({
     leaflet() %>%
-      addProviderTiles('Esri.WorldTopoMap') %>%
+      addProviderTiles('OpenStreetMap.HOT') %>%
       setView(lng = -73.98097, lat = 40.7562, zoom = 12)
-    })
-
+  })
+  
   observeEvent(input$click_back_button,{
     if(input$click_back_button){
       leafletProxy("map3") %>%
         setView(lng = -73.98097, lat = 40.7562, zoom = 12)
-      }
-    })
-
+    }
+  })
+  
   areas <- reactive({
     cond.0 <- if(is.null(input$check2_type)){paste0("pop_american >= ", input$check2_ppr, " | is.na(pop_american) == TRUE")
     } else if("American" %in% input$check2_type){paste0("pop_american >= ", input$check2_ppr)
     } else{"pop_american >= 500 | is.na(pop_american) == TRUE"}
-
+    
     cond.1 <- if(is.null(input$check2_type)){paste0("pop_quickmeal >= ", input$check2_ppr, " | is.na(pop_quickmeal) == TRUE")
     } else if("Quick Meal" %in% input$check2_type){paste0("pop_quickmeal >= ", input$check2_ppr)
     } else{"pop_quickmeal >= 500 | is.na(pop_quickmeal) == TRUE"}
-
+    
     cond.2 <- if(is.null(input$check2_type)){paste0("pop_asian >= ", input$check2_ppr, " | is.na(pop_asian) == TRUE")
     } else if("Asian" %in% input$check2_type){paste0("pop_asian >= ", input$check2_ppr)
     } else{"pop_asian >= 500 | is.na(pop_asian) == TRUE"}
-
+    
     cond.3 <- if(is.null(input$check2_type)){paste0("pop_chinese >= ", input$check2_ppr, " | is.na(pop_chinese) == TRUE")
     } else if("Chinese" %in% input$check2_type){paste0("pop_chinese >= ", input$check2_ppr)
     } else{"pop_chinese >= 500 | is.na(pop_chinese) == TRUE"}
-
+    
     cond.4 <- if(is.null(input$check2_type)){paste0("pop_dessert >= ", input$check2_ppr, " | is.na(pop_dessert) == TRUE")
     } else if("Dessert" %in% input$check2_type){paste0("pop_dessert >= ", input$check2_ppr)
     } else{"pop_dessert >= 500 | is.na(pop_dessert) == TRUE"}
-
+    
     cond.5 <- if(is.null(input$check2_type)){paste0("pop_european >= ", input$check2_ppr, " | is.na(pop_european) == TRUE")
     } else if("European" %in% input$check2_type){paste0("pop_european >= ", input$check2_ppr)
     } else{"pop_european >= 500 | is.na(pop_european) == TRUE"}
-
+    
     cond.6 <- if(is.null(input$check2_type)){paste0("pop_italian >= ", input$check2_ppr, " | is.na(pop_italian) == TRUE")
     } else if("Italian" %in% input$check2_type){paste0("pop_italian >= ", input$check2_ppr)
     } else{"pop_italian >= 500 | is.na(pop_italian) == TRUE"}
-
+    
     cond.7 <- if(is.null(input$check2_type)){paste0("pop_mexican >= ", input$check2_ppr, " | is.na(pop_mexican) == TRUE")
     } else if("Mexican" %in% input$check2_type){paste0("pop_mexican >= ", input$check2_ppr)
     } else{"pop_mexican >= 500 | is.na(pop_mexican) == TRUE"}
-
+    
     cond.8 <- if(is.null(input$check2_type)){paste0("pop_seafood >= ", input$check2_ppr, " | is.na(pop_seafood) == TRUE")
     } else if("Seafood" %in% input$check2_type){paste0("pop_seafood >= ", input$check2_ppr)
     } else{"pop_seafood >= 500 | is.na(pop_seafood) == TRUE"}
-
+    
     cond.9 <- if(is.null(input$check2_type)){paste0("pop_other >= ", input$check2_ppr, " | is.na(pop_other) == TRUE")
     } else if("Others" %in% input$check2_type){paste0("pop_other >= ", input$check2_ppr)
     } else{"pop_other >= 500 | is.na(pop_other) == TRUE"}
-
+    
     cond.class1 <- if(is.null(input$check2_class)){"is.na(class_1) == FALSE"
-      } else if(!("Upper" %in% input$check2_class)){"class_1 == 0"} else {"is.na(class_1) == FALSE"}
-
+    } else if(!("Upper" %in% input$check2_class)){"class_1 == 0"} else {"is.na(class_1) == FALSE"}
+    
     cond.class2 <- if(is.null(input$check2_class)){"is.na(class_2) == FALSE"
-      }else if(!("Middle" %in% input$check2_class)){"class_2 == 0"} else {"is.na(class_2) == FALSE"}
-
+    }else if(!("Middle" %in% input$check2_class)){"class_2 == 0"} else {"is.na(class_2) == FALSE"}
+    
     cond.class3 <- if(is.null(input$check2_class)){"is.na(class_3) == FALSE"
-      } else if(!("Working" %in% input$check2_class)){"class_3 == 0"} else {"is.na(class_3) == FALSE"}
-
+    } else if(!("Working" %in% input$check2_class)){"class_3 == 0"} else {"is.na(class_3) == FALSE"}
+    
     cond.class4 <- if(is.null(input$check2_class)){"is.na(class_4) == FALSE"
-      } else if(!("Lower" %in% input$check2_class)){"class_4 == 0"} else {"is.na(class_4) == FALSE"}
-
+    } else if(!("Lower" %in% input$check2_class)){"class_4 == 0"} else {"is.na(class_4) == FALSE"}
+    
     cond.age1 <- if(is.null(input$check2_age)){"below5 <= 43 | is.na(below5) == TRUE"
     } else if("<5" %in% input$check2_age){"below5 <= 30"
     } else {"below5 <= 43 | is.na(below5) == TRUE"}
-
+    
     cond.age2 <- if(is.null(input$check2_age)){"X5_14 <= 43 | is.na(X5_14) == TRUE"
     } else if("5-14" %in% input$check2_age) {"X5_14 <= 30"
     } else {"X5_14 <= 43 | is.na(X5_14) == TRUE"}
-
+    
     cond.age3 <-  if(is.null(input$check2_age)){"X15_24 <= 43 | is.na(X15_24) == TRUE"
     } else if("15-24" %in% input$check2_age) {"X15_24 <= 30"
     } else {"X15_24 <= 43 | is.na(X15_24) == TRUE"}
-
+    
     cond.age4 <- if(is.null(input$check2_age)){"X25_34 <= 43 | is.na(X25_34) == TRUE"
     } else if("25-34" %in% input$check2_age) {"X25_34 <= 30"
     } else {"X25_34 <= 43 | is.na(X25_34) == TRUE"}
-
+    
     cond.age5 <- if(is.null(input$check2_age)){"X35_44 <= 43 | is.na(X35_44) == TRUE"
     } else if("35-44" %in% input$check2_age) {"X35_44 <= 30"
     } else {"X35_44 <= 43 | is.na(X35_44) == TRUE"}
-
+    
     cond.age6 <- if(is.null(input$check2_age)){"X45_54 <= 43 | is.na(X45_54) == TRUE"
     } else if("45-54" %in% input$check2_age) {"X45_54 <= 30"
     } else {"X45_54 <= 43 |is.na(X45_54) == TRUE"}
-
+    
     cond.age7 <- if(is.null(input$check2_age)){"X55_64 <= 43 | is.na(X55_64) == TRUE"
     } else if("55-64" %in% input$check2_age) {"X55_64 <= 30"
     } else {"X55_64 <= 43 | is.na(X55_64) == TRUE"}
-
+    
     cond.age8 <- if(is.null(input$check2_age)){"X65above <= 43 | is.na(X65above) == TRUE"
     } else if("65+" %in% input$check2_age) {"X65above <= 30"
     } else {"X65above <= 43 | is.na(X65above) == TRUE"}
-
+    
     cond.crime <- if(input$check2_crime == "Very Safe"){"crime_level == 'Safe'"
     } else if(input$check2_crime == "Safe"){"crime_level == 'Safe' | crime_level == 'Relatively Safe'"
     } else if(input$check2_crime == "A Little Dangerous"){"crime_level == 'Safe' | crime_level == 'Relatively Safe' | crime_level == 'Relatively Dangerous'"
     } else {"is.na(crime_level) == FALSE"}
-
+    
     market.fil <- if(input$check2_market == "Many"){
       40
     } else if(input$check2_market == "A few"){
@@ -443,7 +242,7 @@ shinyServer(function(input, output,session) {
     } else {
       1
     }
-
+    
     theatre.fil <- if(input$check2_ct == "Many"){
       10
     } else if(input$check2_ct == "A few"){
@@ -451,7 +250,7 @@ shinyServer(function(input, output,session) {
     } else {
       0
     }
-
+    
     areas <- (filter_data %>%
                 filter(eval(parse(text = cond.0)), eval(parse(text = cond.1)), eval(parse(text = cond.2)), eval(parse(text = cond.3)),
                        eval(parse(text = cond.4)), eval(parse(text = cond.5)), eval(parse(text = cond.6)), eval(parse(text = cond.7)),
@@ -510,7 +309,7 @@ shinyServer(function(input, output,session) {
                                      filter(
                                        Zipcode %in% areas()), 
                                    options = list("sScrollX" = "100%", "bLengthChange" = FALSE))
- 
+  
   # Panel 2 Map
   observe({
     if(length(areas())!=0){
@@ -518,7 +317,7 @@ shinyServer(function(input, output,session) {
         addPolygons(data=subset(subdat, subdat$ZIPCODE%in% areas()),
                     weight = 2,
                     color = "#34675C",
-                    fillColor = "#B3C100",
+                    fillColor = "#cbefb3",
                     fillOpacity=0.7,
                     group="new_added",
                     noClip = TRUE, label = ~ZIPCODE)
@@ -544,8 +343,8 @@ shinyServer(function(input, output,session) {
     updateSelectInput(session, "check2_trans",selected = "")
     updateSelectInput(session, "check2_ct",selected = "")
   })
-
-
+  
+  
 })
 
 
