@@ -16,7 +16,7 @@
 	
 **Planning to open a restaurant in Manhattan?** 
 
-**Our planner is the perfect way to find the best location for your restaurant? Please try our [app](https://fall2018project2gr3.shinyapps.io/open-a-restuarant/!** )
+**Our planner is the perfect way to find the best location for your restaurant? Please try our [app](https://fall2018project2gr3.shinyapps.io/open-a-restuarant/! )!**
 
 + **Project summary**: 
 One of the riskiest businesses to open nowadays is the restaurant business. According to a study conducted by the [Perry Group](https://yourbusiness.azcentral.com/average-life-span-restaurant-6024.html), most restaurants close within their first year and 30% close within 5 years. Moreover, private restaurants have much lower success rate than restaurant chains. One of the main reason for this failure is choosing the wrong location. Private restaurant owners lack the resources chains have to optimally choose the location of their restaurant. While many apps provide optimal restaurant choices for the customer side, **Our app intends to provide the required information from the owner's perspective to the potential restaurant owner**
