@@ -11,10 +11,21 @@ library(leaflet)
 library(data.table)
 
 shinyUI(
-  fluidPage(includeCSS("style.css"),
+  fluidPage(includeCSS("www/style.css"),
             navbarPage(p(class="h","Open-a-Restaurant"),id = "inTabset", fluid=T,
+
+                       tabPanel("Home",icon=icon("home"),
+                                div(class="home",
+                                    tags$head(
+                                      # Include our custom CSS
+                                      includeCSS("www/styles.css"),
+                                      includeScript("www/click_hover.js")
+                                    ),
+                                    align="center"
+                                )
+                       ),
                        
-                       
+
                        tabPanel("Map-it!", icon = icon("map"),
                                 div(class="outer",
                                     tags$style(type = "text/css", ".outer {position: fixed; top: 41px; left: 0; right: 0; bottom: 0; overflow: hidden; padding: 0}"),
@@ -30,21 +41,15 @@ shinyUI(
                                                   h4(textOutput("Female.per"),align="left"),
                                                   h4(textOutput("yelp.rate"),align="left"),
                                                   plotOutput("pie_age_rest", width = "100%", height = "300px")
-                                                  
-                                                  
                                     ))),
-                       
-                       
-                       
-                       
-                       
+                      
        
                        tabPanel("Find-it", icon = icon("map"),  fluidPage(
                          fluidRow(
                            tags$head(
                              # Include our custom CSS
-                             includeCSS("../lib/styles.css"),
-                             includeScript("../lib/click_hover.js")
+                             includeCSS("www/styles.css"),
+                             includeScript("www/click_hover.js")
                            ),
                            
                            
@@ -88,13 +93,11 @@ shinyUI(
                            )
                          ) 
                        )
-                       ),
-                       
-                       tabPanel('Contact information',icon=icon('home'),
-                                div(class="outer"),
-                                mainPanel(img(src='first_panel.png', height="170%", width="150%", align = "center")))
-            
-                  
-                       
+                       )
+                       # ,
+                       # tabPanel('Contact information',icon=icon('home'),
+                       #          div(class="outer"),
+                       #          mainPanel(img(src='first_panel.png', height="170%", width="150%", align = "center")))
+           
             )
   ))

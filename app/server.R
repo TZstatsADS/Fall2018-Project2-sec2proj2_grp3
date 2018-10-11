@@ -22,7 +22,7 @@ library(dmm)
 library(gridExtra)
 restaurant<-read.csv("../data/restaurant_new2.csv")
 income<-read.csv("../data/income1.csv")
-yelp.rate<-read.csv("../data/zip.rate1.csv")
+yelp.rate<-read.csv("../data/zip.rate.csv")
 age_sex<-read.csv("../data/age_sex - new2.csv", header = T)
 pie_type<-read.csv("../data/zip.prop2.csv")
 load("../data/subdat.RData")
@@ -45,13 +45,14 @@ shinyServer(function(input, output,session) {
     domain = subdat$value
   )
   
-  leafletProxy("map",data=subdat)%>%
-    addPolygons(layerId = ~ZIPCODE,
+  observe({leafletProxy("map",data=subdat)%>%
+      addPolygons(layerId = ~ZIPCODE,
                 stroke = T, weight=1,
                 fillOpacity = 0.3,
                 color = ~pal(value),
                 highlightOptions = highlightOptions(color='#ff1900', opacity = 0.3, weight = 2, fillOpacity = 0.4,
                                                     bringToFront = TRUE, sendToBack = TRUE))
+  })
   
   ###Reactions when click the polygon
   observeEvent(input$map_shape_click, {
@@ -123,7 +124,7 @@ shinyServer(function(input, output,session) {
             background="green",
             color="white"  )))})
   
-  ### Panel 2: Owner's Choice
+  ### Panel 2: Find it
   
   output$map3 <- renderLeaflet({
     leaflet() %>%
