@@ -37,7 +37,7 @@ One of the riskiest businesses to open nowadays is the restaurant business. Acco
  We rely on many data sources mainly collected from [NYC open data]( https://opendata.cityofnewyork.us/) and [U.S. government open data](https://data.gov/).
  
 + **Contribution statement**: 
-We had a great experience working together on this project. We feel like the progress of our work was timely and efficient mainly due to great team work. We conducted many group meetings, brain stormed together on each functionality of our app and listened to every team member's thoughts. All team members were highly engaged in this project and conrtibuted equally.
+We had a great experience working together on this project. We feel like the progress of our work was timely and efficient mainly due to great team work. We conducted many group meetings, brain stormed together on each functionality of our app and listened to every team member's thoughts. All team members were highly engaged in each part of this project and conrtibuted equally.
 
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 
