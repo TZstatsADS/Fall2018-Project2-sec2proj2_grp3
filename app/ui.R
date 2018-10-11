@@ -44,7 +44,7 @@ shinyUI(
                                     ))),
                       
        
-                       tabPanel("Find-it", icon = icon("map"),  fluidPage(
+                       tabPanel("Find-it", icon = icon("search"),  fluidPage(
                          fluidRow(
                            tags$head(
                              # Include our custom CSS
