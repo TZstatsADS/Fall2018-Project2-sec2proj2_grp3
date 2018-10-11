@@ -2,7 +2,7 @@
 
 ### [Project Description](doc/project2_desc.md)
 
-![screenshot](docs/figs/Map-it!.PNG
+![screenshot](docs/figs/Map-it!.PNG)
 ![screenshot](docs/figs/Find-it!.PNG)
 
 
