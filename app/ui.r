@@ -11,7 +11,7 @@ library(leaflet)
 library(data.table)
 
 shinyUI(
-  fluidPage(includeCSS("../lib/style.css"),
+  fluidPage(includeCSS("style.css"),
             navbarPage(p(class="h","Plan-a-Restaurant"),id = "inTabset", 
                        
                        fluid=T,
@@ -38,8 +38,8 @@ shinyUI(
                          fluidRow(
                            tags$head(
                              # Include our custom CSS
-                             includeCSS("../lib/styles.css"),
-                             includeScript("../lib/click_hover.js")
+                             includeCSS("styles.css"),
+                             includeScript("click_hover.js")
                            ),
                            
                            
@@ -72,8 +72,6 @@ shinyUI(
                          hr(),
                          
                          fluidRow(
-                           #column
-                           
                            column(width=6, 
                                   dataTableOutput("table2")
                            ),

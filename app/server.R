@@ -20,15 +20,16 @@ library(sp)
 library(maptools)
 library(dmm)
 library(gridExtra)
-restaurant<-read.csv("../data/restaurant_new2.csv")
-income<-read.csv("../data/income1.csv")
-yelp.rate<-read.csv("../data/zip.rate1.csv")
-age_sex<-read.csv("../data/age_sex - new2.csv", header = T)
-pie_type<-read.csv("../data/zip.prop2.csv")
-load("../data/subdat.RData")
 
-filter_data <- read.csv("../output/filter_data_used.csv", as.is = T)
-table_display <- read.csv("../output/table_display.csv", as.is = T, check.names = FALSE)
+restaurant <- read.csv("./data/restaurant_new2.csv")
+income <- read.csv("./data/income1.csv")
+yelp.rate <- read.csv("./data/zip.rate1.csv")
+age_sex <- read.csv("./data/age_sex - new2.csv", header = T)
+pie_type <- read.csv("./data/zip.prop2.csv")
+load("./data/subdat.RData")
+
+filter_data <- read.csv("./output/filter_data_used.csv", as.is = T)
+table_display <- read.csv("./output/table_display.csv", as.is = T, check.names = FALSE)
 
 shinyServer(function(input, output,session) {
   
@@ -343,8 +344,6 @@ shinyServer(function(input, output,session) {
     updateSelectInput(session, "check2_trans",selected = "")
     updateSelectInput(session, "check2_ct",selected = "")
   })
-  
-  
 })
 
 
