@@ -34,24 +34,23 @@ shinyServer(function(input, output,session) {
   
   #Esri.WorldTopoMap
   #########main map######
-  output$map <- renderLeaflet({
-    leaflet(options = leafletOptions(zoomControl = FALSE))%>%
-      setView(lng = -73.98928, lat = 40.75042, zoom = 13)%>%
-      addProviderTiles("OpenStreetMap.HOT")
-  })
-  
   pal <- colorNumeric(
     palette = "Greens",
     domain = subdat$value
   )
   
-  observe({leafletProxy("map",data=subdat)%>%
+  output$map <- renderLeaflet({
+    m <- leaflet(options = leafletOptions(zoomControl = FALSE))%>%
+      setView(lng = -73.98928, lat = 40.75042, zoom = 13)%>%
+      addProviderTiles("OpenStreetMap.HOT")
+    leafletProxy("map",data=subdat)%>%
       addPolygons(layerId = ~ZIPCODE,
                 stroke = T, weight=1,
                 fillOpacity = 0.3,
                 color = ~pal(value),
                 highlightOptions = highlightOptions(color='#ff1900', opacity = 0.3, weight = 2, fillOpacity = 0.4,
                                                     bringToFront = TRUE, sendToBack = TRUE))
+    m
   })
   
   ###Reactions when click the polygon
