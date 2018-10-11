@@ -2,8 +2,8 @@
 
 ### [Project Description](doc/project2_desc.md)
 
-![screenshot](doc/figs/Map-it!.png)
-![screenshot](doc/figs/Find-it!.png)
+![screenshot](docs/figs/Map-it!.PNG
+![screenshot](docs/figs/Find-it!.PNG)
 
 
 ## Plan-a-Restaurant
