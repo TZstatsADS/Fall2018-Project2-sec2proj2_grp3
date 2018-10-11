@@ -29,7 +29,7 @@ One of the riskiest businesses to open nowadays is the restaurant business. Acco
 	![screenshot](doc/figs/Map-it!.PNG)
 	
 	+ **Find it!**:
-	a location suggestion tool which allows the future restaurant owner to zone-in on all the areas which are ideal for his restaurant given a set of criterias: restaurant type, the minimal amount of people per this type of restaurants in the area and target clientele of the restaurant, such as socio-economic class and age. After an initial screening, the owner is given an overview of statistics about the suggested areas such as relative amount of restaurants of his type in the area, relative amount of people per this type of restaurants, accessibility, crime frequency, etc., and can rank the areas according to the the different statistic, to gain a full understanding of the pros and cons of each area and optimize his choice.
+	a location suggestion tool which allows the future restaurant owner to zone-in on all the areas which are ideal for his restaurant given a set of criterias: restaurant type, the minimal amount of people per this type of restaurants in the area and target clientele of the restaurant, such as socio-economic class and age. After an initial screening, the map highlights the suggested areas and provides a table with relevant information and statistics, and can rank the areas according to the a desired statistic, to gain a full understanding of the pros and cons of each area and optimize his choice.
 	
 ![screenshot](doc/figs/Find-it!.PNG)
 
