@@ -87,6 +87,7 @@ shinyServer(function(input, output,session) {
         df_age[i,3]<-as.numeric(row_age[1,i+3])
       }
       colnames(df_age)[1]<-""
+      df_age[,2]<-c("<5","5-14","15-24","25-34","35-44","45-54","55-64","65+")
       ap<- ggplot(df_age, aes(x="", y=X3, fill=X2))+ geom_bar(width = 1, stat = "identity")+theme(plot.margin=grid::unit(c(0,4,0,0), "mm")) + theme_void()
       pie <- ap + coord_polar("y", start=0)+xlab("")+ylab("")+theme(legend.position="left")+ggtitle("Age Distribution")+theme(plot.title = element_text(hjust = 0.5, face = "bold"))+labs(fill = "Age Groups")
 
