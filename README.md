@@ -1,7 +1,7 @@
 # Project 2: Shiny App Development Version 2.0
 
 ### [Project Description](doc/project2_desc.md)
-![screenshot](doc/figs/Homepage.PNG)
+![screenshot](app/www/first_panel.PNG)
 
 
 
